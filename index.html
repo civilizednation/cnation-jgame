@@ -9,7 +9,7 @@ body {
 margin: 0;
 overflow: hidden;
 background-color: #2c3e50;
-font-family: 'Comic Sans MS', sans-serif;
+font-family: 'Comic Sans MS', 'Malgun Gothic', sans-serif;
 touch-action: none;
 }
 #cnation-start-screen, #cnation-game-over {
@@ -24,18 +24,26 @@ z-index: 30;
 }
 #cnation-game-over {
 display: none;
-background: rgba(0, 0, 0, 0.8);
+background: rgba(0, 0, 0, 0.85);
 }
 h1 {
 color: #ff1493;
 font-size: 32px;
-margin-bottom: 30px;
+margin-bottom: 20px;
 text-shadow: 2px 2px #fff;
 text-align: center;
 }
 #cnation-game-over h1 {
 color: #ff4500;
 text-shadow: 2px 2px #000;
+}
+.cnation-select {
+font-size: 20px;
+padding: 10px;
+margin-bottom: 20px;
+border-radius: 10px;
+border: 2px solid #ffb6c1;
+width: 220px;
 }
 .cnation-btn {
 background-color: #ffb6c1;
@@ -56,56 +64,139 @@ box-shadow: none;
 }
 #cnation-game-ui {
 position: absolute;
-top: 10px;
+top: 5px;
 width: 100%;
 text-align: center;
 z-index: 10;
 display: none;
 pointer-events: none;
 }
-#cnation-score-text {
-font-size: 22px;
-font-weight: bold;
+#cnation-top-info {
+background: rgba(0,0,0,0.5);
 color: #fff;
-margin: 0;
-text-shadow: 2px 2px 0px #000;
+padding: 10px;
+border-radius: 15px;
+display: inline-block;
+margin-top: 5px;
+}
+.cnation-ui-text {
+font-size: 18px;
+font-weight: bold;
+margin: 3px 0;
+text-shadow: 1px 1px 0px #000;
+}
+#cnation-question-text {
+font-size: 26px;
+color: #ffd700;
+}
+#cnation-timer-bar {
+width: 200px;
+height: 10px;
+background: #eee;
+border-radius: 5px;
+margin: 5px auto;
+overflow: hidden;
+}
+#cnation-timer-fill {
+width: 100%;
+height: 100%;
+background: #00ff00;
+transition: width 0.1s linear, background 0.3s;
+}
+.cnation-word-label {
+position: absolute;
+color: #fff;
+font-weight: bold;
+font-size: 16px;
+text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+pointer-events: none;
+transform: translate(-50%, -50%);
+z-index: 5;
+display: none;
+background: rgba(0,0,0,0.4);
+padding: 2px 6px;
+border-radius: 5px;
 }
 </style>
 </head>
 <body>
 
 <div id="cnation-start-screen">
-<h1>명국이의<br>지렁이 게임</h1>
-<button class="cnation-btn" onclick="cnationStartGame('easy')">시작 (하 - 적 1마리)</button>
-<button class="cnation-btn" onclick="cnationStartGame('normal')">시작 (중 - 적 3마리)</button>
-<button class="cnation-btn" onclick="cnationStartGame('hard')">시작 (상 - 적 5마리)</button>
+<h1>영단어 마스터<br>지렁이 게임</h1>
+<select id="cnation-level-select" class="cnation-select">
+<option value="m1">중학교 1학년</option>
+<option value="m2">중학교 2학년</option>
+<option value="m3">중학교 3학년</option>
+<option value="h1">고등학교 1학년</option>
+<option value="h2">고등학교 2학년</option>
+<option value="h3">고등학교 3학년</option>
+<option value="expert">전문가</option>
+</select>
+<button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
 </div>
 
 <div id="cnation-game-ui">
-<p id="cnation-score-text">SCORE: <span id="cnation-score-val">0</span></p>
+<div id="cnation-top-info">
+<p class="cnation-ui-text">난이도: <span id="cnation-game-level">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
+<p id="cnation-question-text">의미</p>
+<div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
+</div>
+</div>
+
+<div id="cnation-labels-container">
+<div id="cnation-label-0" class="cnation-word-label">word1</div>
+<div id="cnation-label-1" class="cnation-word-label">word2</div>
+<div id="cnation-label-2" class="cnation-word-label">word3</div>
+<div id="cnation-label-3" class="cnation-word-label">word4</div>
 </div>
 
 <div id="cnation-game-over">
 <h1>GAME OVER!</h1>
-<p id="cnation-score-text" style="margin-bottom: 30px;">최종 점수: <span id="cnation-final-score">0</span></p>
+<p class="cnation-ui-text" style="margin-bottom: 30px;">최종 점수: <span id="cnation-final-score">0</span></p>
 <button class="cnation-btn" onclick="cnationGoToTitle()">타이틀로</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+const cnationWordDB = {
+m1: [
+{en:"apple", ko:"사과"}, {en:"school", ko:"학교"}, {en:"friend", ko:"친구"}, {en:"water", ko:"물"}, {en:"book", ko:"책"},
+{en:"house", ko:"집"}, {en:"family", ko:"가족"}, {en:"happy", ko:"행복한"}, {en:"love", ko:"사랑"}, {en:"time", ko:"시간"}
+],
+m2: [
+{en:"develop", ko:"개발하다"}, {en:"experience", ko:"경험"}, {en:"environment", ko:"환경"}, {en:"improve", ko:"향상시키다"}, {en:"popular", ko:"인기있는"},
+{en:"traditional", ko:"전통적인"}, {en:"various", ko:"다양한"}, {en:"suggest", ko:"제안하다"}, {en:"purpose", ko:"목적"}, {en:"decide", ko:"결정하다"}
+],
+m3: [
+{en:"analyze", ko:"분석하다"}, {en:"benefit", ko:"이익"}, {en:"challenge", ko:"도전"}, {en:"determine", ko:"결정하다"}, {en:"effect", ko:"효과"},
+{en:"factor", ko:"요인"}, {en:"generate", ko:"발생시키다"}, {en:"identify", ko:"식별하다"}, {en:"maintain", ko:"유지하다"}, {en:"occur", ko:"발생하다"}
+],
+h1: [
+{en:"acquire", ko:"습득하다"}, {en:"capacity", ko:"수용력"}, {en:"evaluate", ko:"평가하다"}, {en:"fundamental", ko:"근본적인"}, {en:"hypothesis", ko:"가설"},
+{en:"imply", ko:"암시하다"}, {en:"modify", ko:"수정하다"}, {en:"objective", ko:"객관적인"}, {en:"perspective", ko:"관점"}, {en:"relevant", ko:"관련된"}
+],
+h2: [
+{en:"abstract", ko:"추상적인"}, {en:"comprehensive", ko:"포괄적인"}, {en:"contradiction", ko:"모순"}, {en:"derive", ko:"끌어내다"}, {en:"empirical", ko:"경험적인"},
+{en:"fluctuate", ko:"변동하다"}, {en:"hierarchy", ko:"계급"}, {en:"inevitable", ko:"불가피한"}, {en:"paradigm", ko:"패러다임"}, {en:"subsequent", ko:"그 다음의"}
+],
+h3: [
+{en:"ambiguous", ko:"애매한"}, {en:"cognitive", ko:"인지적인"}, {en:"dilemma", ko:"진퇴양난"}, {en:"explicit", ko:"명백한"}, {en:"intrinsic", ko:"본질적인"},
+{en:"metaphor", ko:"은유"}, {en:"pragmatic", ko:"실용적인"}, {en:"resilient", ko:"회복력 있는"}, {en:"spontaneous", ko:"자발적인"}, {en:"vulnerable", ko:"취약한"}
+],
+expert: [
+{en:"aberration", ko:"일탈"}, {en:"capricious", ko:"변덕스러운"}, {en:"ephemeral", ko:"단명하는"}, {en:"fastidious", ko:"까다로운"}, {en:"iconoclast", ko:"우상 파괴자"},
+{en:"obfuscate", ko:"모호하게 하다"}, {en:"pedantic", ko:"현학적인"}, {en:"sycophant", ko:"아첨꾼"}, {en:"ubiquitous", ko:"어디에나 있는"}, {en:"zealous", ko:"열성적인"}
+]
+};
+
 const cnationScene = new THREE.Scene();
 cnationScene.background = new THREE.Color(0x2c3e50);
-
 const cnationBounds = { x: 10, y: 18 };
 const cnationCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 function cnationAdjustCamera() {
 let aspect = window.innerWidth / window.innerHeight;
-if (aspect < 0.6) {
-cnationCamera.position.set(0, 65, 0);
-} else {
-cnationCamera.position.set(0, 50, 0);
-}
+cnationCamera.position.set(0, aspect < 0.6 ? 65 : 50, 0);
 cnationCamera.lookAt(0, 0, 0);
 cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
@@ -121,9 +212,6 @@ const cnationDirLight = new THREE.DirectionalLight(0xffffff, 0.6);
 cnationDirLight.position.set(10, 20, 5);
 cnationScene.add(cnationDirLight);
 
-const cnationEatSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
-const cnationDieSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3');
-
 const cnationFloorGeo = new THREE.PlaneGeometry(cnationBounds.x * 2 + 2, cnationBounds.y * 2 + 2);
 const cnationFloorMat = new THREE.MeshPhongMaterial({ color: 0x34495e });
 const cnationFloor = new THREE.Mesh(cnationFloorGeo, cnationFloorMat);
@@ -134,7 +222,6 @@ cnationScene.add(cnationFloor);
 const cnationWallGeoX = new THREE.BoxGeometry(cnationBounds.x * 2 + 3, 1, 1);
 const cnationWallGeoY = new THREE.BoxGeometry(1, 1, cnationBounds.y * 2 + 3);
 const cnationWallMat = new THREE.MeshPhongMaterial({ color: 0x95a5a6 });
-
 const cnationWallTop = new THREE.Mesh(cnationWallGeoX, cnationWallMat);
 cnationWallTop.position.set(0, 0, -cnationBounds.y - 1);
 cnationScene.add(cnationWallTop);
@@ -150,8 +237,15 @@ cnationScene.add(cnationWallRight);
 
 let cnationGameState = 'TITLE';
 let cnationScore = 0;
-let cnationBaseInterval = 200;
-let cnationMaxEnemies = 1;
+let cnationCorrectAnswers = 0;
+let cnationGameStage = 0; 
+let cnationBaseInterval = 250;
+let cnationMaxEnemies = 3;
+
+let cnationSelectedVocab = [];
+let cnationCurrentQuestion = null;
+let cnationTimeLeft = 10;
+let cnationLastFrameTime = 0;
 
 let cnationPlayerLogic = [];
 let cnationPlayerMeshes = [];
@@ -163,24 +257,24 @@ let cnationEnemies = [];
 let cnationFoodData = [];
 
 const cnationGeoSphere = new THREE.SphereGeometry(0.5, 32, 32);
-const cnationGeoBox = new THREE.BoxGeometry(0.6, 0.6, 0.6);
-
+const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
 const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0xff69b4 });
 const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0xffb6c1 });
 const cnationMatEnemyHead = new THREE.MeshPhongMaterial({ color: 0x3498db });
 const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0x87ceeb });
-const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+const cnationMatFoodCorrect = new THREE.MeshPhongMaterial({ color: 0xffd700, emissive: 0xaa8800 });
+const cnationMatFoodWrong = new THREE.MeshPhongMaterial({ color: 0xdddddd });
 
-window.cnationStartGame = function(difficulty) {
+window.cnationStartGame = function() {
+let levelKey = document.getElementById('cnation-level-select').value;
+cnationSelectedVocab = cnationWordDB[levelKey];
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'block';
 cnationAdjustCamera();
-if(difficulty === 'easy') { cnationBaseInterval = 250; cnationMaxEnemies = 1; }
-if(difficulty === 'normal') { cnationBaseInterval = 150; cnationMaxEnemies = 3; }
-if(difficulty === 'hard') { cnationBaseInterval = 80; cnationMaxEnemies = 5; }
 cnationResetWorld();
 cnationGameState = 'PLAYING';
+cnationLastFrameTime = performance.now();
 };
 
 window.cnationGoToTitle = function() {
@@ -188,7 +282,24 @@ document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'none';
 document.getElementById('cnation-start-screen').style.display = 'flex';
 cnationGameState = 'TITLE';
+for(let i=0; i<4; i++) {
+document.getElementById('cnation-label-'+i).style.display = 'none';
+}
 };
+
+function cnationUpdateStage() {
+if(cnationCorrectAnswers >= 20) {
+cnationGameStage = 2; cnationBaseInterval = 100; cnationMaxEnemies = 5;
+document.getElementById('cnation-game-level').innerText = "상";
+} else if(cnationCorrectAnswers >= 10) {
+cnationGameStage = 1; cnationBaseInterval = 180; cnationMaxEnemies = 4;
+document.getElementById('cnation-game-level').innerText = "중";
+} else {
+cnationGameStage = 0; cnationBaseInterval = 250; cnationMaxEnemies = 3;
+document.getElementById('cnation-game-level').innerText = "하";
+}
+while(cnationEnemies.length < cnationMaxEnemies) cnationSpawnEnemy();
+}
 
 function cnationResetWorld() {
 cnationPlayerMeshes.forEach(m => cnationScene.remove(m));
@@ -200,6 +311,7 @@ cnationPlayerMeshes = [];
 cnationEnemies = [];
 cnationFoodData = [];
 cnationScore = 0;
+cnationCorrectAnswers = 0;
 document.getElementById('cnation-score-val').innerText = cnationScore;
 cnationPlayerDir = { x: 0, y: -1 };
 cnationPlayerNextDir = { x: 0, y: -1 };
@@ -212,10 +324,8 @@ m.position.set(0, 0.5, i);
 cnationPlayerMeshes.push(m);
 cnationScene.add(m);
 }
-while(cnationEnemies.length < cnationMaxEnemies) {
-cnationSpawnEnemy();
-}
-cnationSpawnFood();
+cnationUpdateStage();
+cnationSpawnQuestion();
 }
 
 function cnationSpawnEnemy() {
@@ -230,29 +340,76 @@ m.position.set(rx, 0.5, rz + i);
 meshes.push(m);
 cnationScene.add(m);
 }
-cnationEnemies.push({
-logic: logic,
-meshes: meshes,
-dir: { x: 0, y: -1 }
-});
+cnationEnemies.push({ logic: logic, meshes: meshes, dir: { x: 0, y: -1 } });
 }
 
-function cnationSpawnFood() {
-while(cnationFoodData.length < 4) {
-let rx = Math.floor(Math.random() * (cnationBounds.x * 2)) - cnationBounds.x;
-let rz = Math.floor(Math.random() * (cnationBounds.y * 2)) - cnationBounds.y;
-let m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
+function cnationSpawnQuestion() {
+cnationFoodData.forEach(f => cnationScene.remove(f.mesh));
+cnationFoodData = [];
+cnationTimeLeft = 10;
+document.getElementById('cnation-timer-fill').style.background = '#00ff00';
+
+let shuffled = [...cnationSelectedVocab].sort(() => 0.5 - Math.random());
+let choices = shuffled.slice(0, 4);
+cnationCurrentQuestion = choices[Math.floor(Math.random() * 4)];
+document.getElementById('cnation-question-text').innerText = cnationCurrentQuestion.ko;
+
+for(let i=0; i<4; i++) {
+let valid = false;
+let rx, rz;
+while(!valid) {
+rx = Math.floor(Math.random() * (cnationBounds.x * 2)) - cnationBounds.x;
+rz = Math.floor(Math.random() * (cnationBounds.y * 2)) - cnationBounds.y;
+valid = true;
+for(let p of cnationPlayerLogic) if(p.x === rx && p.z === rz) valid = false;
+for(let f of cnationFoodData) if(f.x === rx && f.z === rz) valid = false;
+}
+let isCorrect = (choices[i].en === cnationCurrentQuestion.en);
+let m = new THREE.Mesh(cnationGeoBox, isCorrect ? cnationMatFoodCorrect : cnationMatFoodWrong);
 m.position.set(rx, 0.5, rz);
-cnationFoodData.push({ x: rx, z: rz, mesh: m });
+cnationFoodData.push({ x: rx, z: rz, mesh: m, word: choices[i].en, isCorrect: isCorrect });
 cnationScene.add(m);
+
+let lbl = document.getElementById('cnation-label-' + i);
+lbl.innerText = choices[i].en;
+lbl.style.display = 'block';
 }
 }
 
-let cnationTouchX = 0;
-let cnationTouchY = 0;
+function cnationPenalty() {
+cnationScore -= 5;
+if(cnationScore < 0) cnationScore = 0;
+document.getElementById('cnation-score-val').innerText = cnationScore;
+if(cnationPlayerLogic.length > 3) {
+cnationPlayerLogic.pop();
+let m = cnationPlayerMeshes.pop();
+cnationScene.remove(m);
+}
+cnationSpawnQuestion();
+}
+
+function cnationUpdateLabels() {
+for(let i=0; i<4; i++) {
+let f = cnationFoodData[i];
+if(!f) continue;
+let pos = f.mesh.position.clone();
+pos.project(cnationCamera);
+let x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+let y = (pos.y * -0.5 + 0.5) * window.innerHeight;
+let lbl = document.getElementById('cnation-label-' + i);
+let offsetX = 0;
+let offsetY = -35; 
+if(f.z < -cnationBounds.y + 2) offsetY = 35; 
+if(f.x < -cnationBounds.x + 2) { offsetX = 40; offsetY = 0; } 
+else if(f.x > cnationBounds.x - 2) { offsetX = -40; offsetY = 0; } 
+lbl.style.left = (x + offsetX) + 'px';
+lbl.style.top = (y + offsetY) + 'px';
+}
+}
+
+let cnationTouchX = 0; let cnationTouchY = 0;
 window.addEventListener('touchstart', (e) => {
-cnationTouchX = e.touches[0].screenX;
-cnationTouchY = e.touches[0].screenY;
+cnationTouchX = e.touches[0].screenX; cnationTouchY = e.touches[0].screenY;
 });
 window.addEventListener('touchend', (e) => {
 if (cnationGameState !== 'PLAYING') return;
@@ -269,9 +426,9 @@ else if (dy < -30 && cnationPlayerDir.y === 0) cnationPlayerNextDir = { x: 0, y:
 
 function cnationGameOver() {
 cnationGameState = 'GAMEOVER';
-cnationDieSound.play().catch(()=>{});
 document.getElementById('cnation-final-score').innerText = cnationScore;
 document.getElementById('cnation-game-over').style.display = 'flex';
+for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 }
 
 function cnationTick() {
@@ -289,12 +446,8 @@ let nz = e.logic[0].z + e.dir.y;
 if (nx < -cnationBounds.x || nx > cnationBounds.x || nz < -cnationBounds.y || nz > cnationBounds.y) {
 let turns = e.dir.x === 0 ? [{x:1, y:0}, {x:-1, y:0}] : [{x:0, y:1}, {x:0, y:-1}];
 e.dir = turns[Math.floor(Math.random() * 2)];
-e.nextX = e.logic[0].x + e.dir.x;
-e.nextZ = e.logic[0].z + e.dir.y;
-} else {
-e.nextX = nx;
-e.nextZ = nz;
-}
+e.nextX = e.logic[0].x + e.dir.x; e.nextZ = e.logic[0].z + e.dir.y;
+} else { e.nextX = nx; e.nextZ = nz; }
 });
 
 if (px < -cnationBounds.x || px > cnationBounds.x || pz < -cnationBounds.y || pz > cnationBounds.y) {
@@ -321,71 +474,60 @@ for(let j=0; j<cnationEnemies[i].logic.length; j++) {
 if(e.nextX === cnationEnemies[i].logic[j].x && e.nextZ === cnationEnemies[i].logic[j].z) hit = true;
 }
 }
-if(hit) {
-deadEnemies.push(idx);
-} else {
-let ateIndex = -1;
-for(let f=0; f<cnationFoodData.length; f++) {
-if(e.nextX === cnationFoodData[f].x && e.nextZ === cnationFoodData[f].z) { ateIndex = f; break; }
-}
-if(ateIndex !== -1) {
-let m = new THREE.Mesh(cnationGeoSphere, cnationMatEnemyBody);
-e.meshes.push(m);
-cnationScene.add(m);
-e.logic.push({x: e.logic[e.logic.length-1].x, z: e.logic[e.logic.length-1].z});
-cnationScene.remove(cnationFoodData[ateIndex].mesh);
-cnationFoodData.splice(ateIndex, 1);
-}
-for (let i = e.logic.length - 1; i > 0; i--) {
-e.logic[i].x = e.logic[i - 1].x;
-e.logic[i].z = e.logic[i - 1].z;
-}
-e.logic[0].x = e.nextX;
-e.logic[0].z = e.nextZ;
+if(hit) deadEnemies.push(idx);
+else {
+for (let i = e.logic.length - 1; i > 0; i--) { e.logic[i].x = e.logic[i - 1].x; e.logic[i].z = e.logic[i - 1].z; }
+e.logic[0].x = e.nextX; e.logic[0].z = e.nextZ;
 }
 });
-
 for(let i=deadEnemies.length-1; i>=0; i--) {
 let eIdx = deadEnemies[i];
 cnationEnemies[eIdx].meshes.forEach(m => cnationScene.remove(m));
 cnationEnemies.splice(eIdx, 1);
 }
-while(cnationEnemies.length < cnationMaxEnemies) {
-cnationSpawnEnemy();
-}
+while(cnationEnemies.length < cnationMaxEnemies) cnationSpawnEnemy();
 
 let pAteIndex = -1;
 for(let f=0; f<cnationFoodData.length; f++) {
 if(px === cnationFoodData[f].x && pz === cnationFoodData[f].z) { pAteIndex = f; break; }
 }
 if(pAteIndex !== -1) {
+if(cnationFoodData[pAteIndex].isCorrect) {
 let m = new THREE.Mesh(cnationGeoSphere, cnationMatPlayerBody);
-cnationPlayerMeshes.push(m);
-cnationScene.add(m);
+cnationPlayerMeshes.push(m); cnationScene.add(m);
 cnationPlayerLogic.push({x: cnationPlayerLogic[cnationPlayerLogic.length-1].x, z: cnationPlayerLogic[cnationPlayerLogic.length-1].z});
-cnationScore += 10;
+cnationScore += 10; cnationCorrectAnswers++;
 document.getElementById('cnation-score-val').innerText = cnationScore;
-cnationEatSound.currentTime = 0;
-cnationEatSound.play().catch(()=>{});
-cnationScene.remove(cnationFoodData[pAteIndex].mesh);
-cnationFoodData.splice(pAteIndex, 1);
+cnationUpdateStage();
+cnationSpawnQuestion();
+} else {
+cnationPenalty();
+}
 }
 
+if(cnationGameState === 'PLAYING') {
 for (let i = cnationPlayerLogic.length - 1; i > 0; i--) {
 cnationPlayerLogic[i].x = cnationPlayerLogic[i - 1].x;
 cnationPlayerLogic[i].z = cnationPlayerLogic[i - 1].z;
 }
-cnationPlayerLogic[0].x = px;
-cnationPlayerLogic[0].z = pz;
-cnationSpawnFood();
+cnationPlayerLogic[0].x = px; cnationPlayerLogic[0].z = pz;
+}
 }
 
 function cnationAnimate(time) {
 requestAnimationFrame(cnationAnimate);
+let dt = (time - cnationLastFrameTime) / 1000;
+cnationLastFrameTime = time;
+
 if (cnationGameState === 'PLAYING') {
+cnationTimeLeft -= dt;
+let fill = document.getElementById('cnation-timer-fill');
+fill.style.width = (cnationTimeLeft / 10 * 100) + '%';
+if(cnationTimeLeft < 4) fill.style.background = '#ff0000';
+if(cnationTimeLeft <= 0) cnationPenalty();
+
 cnationFoodData.forEach(f => {
-f.mesh.rotation.x += 0.05;
-f.mesh.rotation.y += 0.05;
+f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03;
 });
 if (time - cnationLastTickTime > cnationBaseInterval) {
 cnationTick();
@@ -401,6 +543,7 @@ let target = new THREE.Vector3(e.logic[i].x, 0.5, e.logic[i].z);
 e.meshes[i].position.lerp(target, 0.4);
 }
 });
+cnationUpdateLabels();
 }
 cnationRenderer.render(cnationScene, cnationCamera);
 }
