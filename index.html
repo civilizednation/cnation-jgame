@@ -8,7 +8,7 @@
 body {
 margin: 0;
 overflow: hidden;
-background-color: #2c3e50;
+background-color: #34495e;
 font-family: 'Comic Sans MS', 'Malgun Gothic', sans-serif;
 touch-action: none;
 }
@@ -169,8 +169,8 @@ border: 1px solid #ffb6c1;
 <script src="./word.js"></script>
 <script>
 const cnationScene = new THREE.Scene();
-cnationScene.background = new THREE.Color(0x2c3e50);
-const cnationBounds = { x: 10, y: 19 };
+cnationScene.background = new THREE.Color(0x34495e);
+const cnationBounds = { x: 11, y: 24 };
 const cnationCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 function cnationAdjustCamera() {
@@ -179,16 +179,16 @@ cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
 
 let fovRad = (cnationCamera.fov * Math.PI) / 180;
-let requiredHeight = cnationBounds.y * 2 + 5; 
-let requiredWidth = cnationBounds.x * 2 + 1;
+let requiredHeight = cnationBounds.y * 2 + 2; 
+let requiredWidth = cnationBounds.x * 2 + 2;
 
 let distanceForHeight = (requiredHeight / 2) / Math.tan(fovRad / 2);
 let distanceForWidth = (requiredWidth / 2) / (Math.tan(fovRad / 2) * aspect);
 
 let finalDistance = Math.max(distanceForHeight, distanceForWidth);
 
-cnationCamera.position.set(0, finalDistance, 3.5);
-cnationCamera.lookAt(0, 0, 3.5);
+cnationCamera.position.set(0, finalDistance, 0);
+cnationCamera.lookAt(0, 0, 0);
 }
 
 const cnationRenderer = new THREE.WebGLRenderer({ antialias: true });
@@ -208,20 +208,21 @@ cnationFloor.rotation.x = -Math.PI / 2;
 cnationFloor.position.y = -0.5;
 cnationScene.add(cnationFloor);
 
-const cnationWallGeoX = new THREE.BoxGeometry(cnationBounds.x * 2 + 3, 1, 1);
-const cnationWallGeoY = new THREE.BoxGeometry(1, 1, cnationBounds.y * 2 + 3);
+const cnationWallGeoX = new THREE.BoxGeometry(cnationBounds.x * 2 + 2, 0.8, 0.8);
+const cnationWallGeoY = new THREE.BoxGeometry(0.8, 0.8, cnationBounds.y * 2 + 2);
 const cnationWallMat = new THREE.MeshPhongMaterial({ color: 0x95a5a6 });
+
 const cnationWallTop = new THREE.Mesh(cnationWallGeoX, cnationWallMat);
-cnationWallTop.position.set(0, 0, -cnationBounds.y - 1);
+cnationWallTop.position.set(0, 0, -cnationBounds.y - 0.5);
 cnationScene.add(cnationWallTop);
 const cnationWallBot = new THREE.Mesh(cnationWallGeoX, cnationWallMat);
-cnationWallBot.position.set(0, 0, cnationBounds.y + 1);
+cnationWallBot.position.set(0, 0, cnationBounds.y + 0.5);
 cnationScene.add(cnationWallBot);
 const cnationWallLeft = new THREE.Mesh(cnationWallGeoY, cnationWallMat);
-cnationWallLeft.position.set(-cnationBounds.x - 1, 0, 0);
+cnationWallLeft.position.set(-cnationBounds.x - 0.5, 0, 0);
 cnationScene.add(cnationWallLeft);
 const cnationWallRight = new THREE.Mesh(cnationWallGeoY, cnationWallMat);
-cnationWallRight.position.set(cnationBounds.x + 1, 0, 0);
+cnationWallRight.position.set(cnationBounds.x + 0.5, 0, 0);
 cnationScene.add(cnationWallRight);
 
 let cnationGameState = 'TITLE';
@@ -321,7 +322,7 @@ cnationSpawnQuestion();
 
 function cnationSpawnEnemy() {
 let rx = Math.floor(Math.random() * (cnationBounds.x * 2 - 4)) - (cnationBounds.x - 2);
-let rz = (Math.random() < 0.5) ? cnationBounds.y - 2 : -cnationBounds.y + 2;
+let rz = (Math.random() < 0.5) ? cnationBounds.y - 3 : -cnationBounds.y + 3;
 let logic = [];
 let meshes = [];
 for (let i = 0; i < 3; i++) {
