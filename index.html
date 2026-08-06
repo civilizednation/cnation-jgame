@@ -179,7 +179,7 @@ cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
 
 let fovRad = (cnationCamera.fov * Math.PI) / 180;
-let requiredHeight = cnationBounds.y * 2 + 1;
+let requiredHeight = cnationBounds.y * 2 + 7;
 let requiredWidth = cnationBounds.x * 2 + 1;
 
 let distanceForHeight = (requiredHeight / 2) / Math.tan(fovRad / 2);
@@ -187,9 +187,9 @@ let distanceForWidth = (requiredWidth / 2) / (Math.tan(fovRad / 2) * aspect);
 
 let finalDistance = Math.min(distanceForHeight, distanceForWidth);
 
-// UI 바 영역(상단 약 3.5칸 분량)만큼 시야 중심을 아래로 밀어서 경기장 상단 벽이 UI 바 바로 밑에 닿도록 설정
-cnationCamera.position.set(0, finalDistance, 3.5);
-cnationCamera.lookAt(0, 0, 3.5);
+let topOffset = -3.8;
+cnationCamera.position.set(0, finalDistance, topOffset);
+cnationCamera.lookAt(0, 0, topOffset);
 }
 
 const cnationRenderer = new THREE.WebGLRenderer({ antialias: true });
@@ -254,7 +254,6 @@ const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
 const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0xff69b4 });
 const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0xffb6c1 });
 
-// 상대 지렁이 색상을 회색계열로 변경 (머리: 0x555555, 몸통: 0xaaaaaa)
 const cnationMatEnemyHead = new THREE.MeshPhongMaterial({ color: 0x555555 });
 const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
 
