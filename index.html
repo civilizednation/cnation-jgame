@@ -129,12 +129,21 @@ text-align: center;
 margin: 15px 0;
 border: 1px solid #ffb6c1;
 }
+#cnation-game-level {
+display: inline-block;
+padding: 2px 8px;
+background-color: rgba(255, 255, 255, 0.9);
+border-radius: 6px;
+font-size: 18px;
+font-weight: 900;
+}
 </style>
 </head>
 <body>
 
 <div id="cnation-start-screen">
 <h1>명국이의 영어단어<br>지렁이 게임</h1>
+<p style="color:#ff1493; font-weight:bold; font-size:18px; margin-bottom:5px; margin-top:-10px;">영어 단어 수준</p>
 <select id="cnation-level-select" class="cnation-select">
 <option value="kindergarten">유치원</option>
 <option value="elementary">초등학교</option>
@@ -145,7 +154,7 @@ border: 1px solid #ffb6c1;
 </div>
 
 <div id="cnation-game-ui">
-<p class="cnation-ui-text">난이도: <span id="cnation-game-level">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
+<p class="cnation-ui-text">난이도: <span id="cnation-game-level" style="color:#000000;">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
 <p id="cnation-question-text">의미</p>
 <div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
 </div>
@@ -197,28 +206,30 @@ osc.connect(gain);
 gain.connect(cnationAudioCtx.destination);
 const now = cnationAudioCtx.currentTime;
 
+let targetVolume = 0.075;
+
 if (type === 'correct') {
 osc.type = 'sine';
 osc.frequency.setValueAtTime(523.25, now);
 osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.15);
-gain.gain.setValueAtTime(0.15, now);
-gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+gain.gain.setValueAtTime(targetVolume, now);
+gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
 osc.start(now);
 osc.stop(now + 0.15);
 } else if (type === 'wrong') {
 osc.type = 'sawtooth';
 osc.frequency.setValueAtTime(180, now);
 osc.frequency.linearRampToValueAtTime(90, now + 0.2);
-gain.gain.setValueAtTime(0.15, now);
-gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+gain.gain.setValueAtTime(targetVolume, now);
+gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
 osc.start(now);
 osc.stop(now + 0.2);
 } else if (type === 'die') {
 osc.type = 'square';
 osc.frequency.setValueAtTime(300, now);
 osc.frequency.linearRampToValueAtTime(60, now + 0.4);
-gain.gain.setValueAtTime(0.15, now);
-gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+gain.gain.setValueAtTime(targetVolume, now);
+gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 osc.start(now);
 osc.stop(now + 0.4);
 }
@@ -282,7 +293,7 @@ let cnationGameState = 'TITLE';
 let cnationScore = 0;
 let cnationCorrectAnswers = 0;
 let cnationGameStage = 0; 
-let cnationBaseInterval = 125;
+let cnationBaseInterval = 208;
 let cnationMaxEnemies = 2;
 let cnationMaxTime = 20;
 
@@ -336,15 +347,29 @@ document.getElementById('cnation-label-'+i).style.display = 'none';
 };
 
 function cnationUpdateStage() {
+let levelSpan = document.getElementById('cnation-game-level');
+
 if(cnationCorrectAnswers >= 20) {
-cnationGameStage = 2; cnationBaseInterval = 60; cnationMaxEnemies = 4; cnationMaxTime = 15;
-document.getElementById('cnation-game-level').innerText = "상";
+cnationGameStage = 2; 
+cnationBaseInterval = 110; 
+cnationMaxEnemies = 4; 
+cnationMaxTime = 15;
+levelSpan.innerText = "상";
+levelSpan.style.color = "#ff0000";
 } else if(cnationCorrectAnswers >= 10) {
-cnationGameStage = 1; cnationBaseInterval = 90; cnationMaxEnemies = 3; cnationMaxTime = 18;
-document.getElementById('cnation-game-level').innerText = "중";
+cnationGameStage = 1; 
+cnationBaseInterval = 154; 
+cnationMaxEnemies = 3; 
+cnationMaxTime = 18;
+levelSpan.innerText = "중";
+levelSpan.style.color = "#0000ff";
 } else {
-cnationGameStage = 0; cnationBaseInterval = 125; cnationMaxEnemies = 2; cnationMaxTime = 20;
-document.getElementById('cnation-game-level').innerText = "하";
+cnationGameStage = 0; 
+cnationBaseInterval = 208; 
+cnationMaxEnemies = 2; 
+cnationMaxTime = 20;
+levelSpan.innerText = "하";
+levelSpan.style.color = "#000000";
 }
 while(cnationEnemies.length < cnationMaxEnemies) cnationSpawnEnemy();
 }
@@ -634,7 +659,7 @@ cnationEnemyTick();
 cnationLastEnemyTickTime = time;
 }
 
-let lerpFactor = 0.25;
+let lerpFactor = 0.35;
 for (let i = 0; i < cnationPlayerMeshes.length; i++) {
 let target = new THREE.Vector3(cnationPlayerLogic[i].x, 0.5, cnationPlayerLogic[i].z);
 cnationPlayerMeshes[i].position.lerp(target, lerpFactor);
