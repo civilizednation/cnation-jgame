@@ -24,7 +24,7 @@ z-index: 30;
 }
 #cnation-game-over {
 display: none;
-background: rgba(0, 0, 0, 0.85);
+background: rgba(0, 0, 0, 0.9);
 }
 h1 {
 color: #ff1493;
@@ -36,6 +36,7 @@ text-align: center;
 #cnation-game-over h1 {
 color: #ff4500;
 text-shadow: 2px 2px #000;
+margin-bottom: 10px;
 }
 .cnation-select {
 font-size: 20px;
@@ -64,37 +65,35 @@ box-shadow: none;
 }
 #cnation-game-ui {
 position: absolute;
-top: 5px;
+top: 0;
 width: 100%;
 text-align: center;
 z-index: 10;
 display: none;
 pointer-events: none;
-}
-#cnation-top-info {
-background: rgba(0,0,0,0.5);
-color: #fff;
-padding: 10px;
-border-radius: 15px;
-display: inline-block;
-margin-top: 5px;
+background: rgba(0,0,0,0.6);
+padding-bottom: 5px;
 }
 .cnation-ui-text {
-font-size: 18px;
+font-size: 16px;
 font-weight: bold;
+color: #fff;
 margin: 3px 0;
 text-shadow: 1px 1px 0px #000;
 }
 #cnation-question-text {
-font-size: 26px;
+font-size: 28px;
+font-weight: bold;
 color: #ffd700;
+margin: 5px 0;
+text-shadow: 2px 2px 0px #000;
 }
 #cnation-timer-bar {
-width: 200px;
-height: 10px;
+width: 90%;
+height: 12px;
 background: #eee;
-border-radius: 5px;
-margin: 5px auto;
+border-radius: 6px;
+margin: 0 auto;
 overflow: hidden;
 }
 #cnation-timer-fill {
@@ -117,6 +116,19 @@ background: rgba(0,0,0,0.4);
 padding: 2px 6px;
 border-radius: 5px;
 }
+#cnation-missed-list {
+max-height: 180px;
+width: 80%;
+overflow-y: auto;
+background: rgba(255,255,255,0.1);
+padding: 10px;
+border-radius: 10px;
+color: #fff;
+font-size: 16px;
+text-align: center;
+margin: 15px 0;
+border: 1px solid #ffb6c1;
+}
 </style>
 </head>
 <body>
@@ -133,11 +145,9 @@ border-radius: 5px;
 </div>
 
 <div id="cnation-game-ui">
-<div id="cnation-top-info">
 <p class="cnation-ui-text">난이도: <span id="cnation-game-level">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
 <p id="cnation-question-text">의미</p>
 <div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
-</div>
 </div>
 
 <div id="cnation-labels-container">
@@ -149,7 +159,9 @@ border-radius: 5px;
 
 <div id="cnation-game-over">
 <h1>GAME OVER!</h1>
-<p class="cnation-ui-text" style="margin-bottom: 30px;">최종 점수: <span id="cnation-final-score">0</span></p>
+<p class="cnation-ui-text">최종 점수: <span id="cnation-final-score">0</span></p>
+<p class="cnation-ui-text">맞춘 단어: <span id="cnation-final-correct">0</span>개</p>
+<div id="cnation-missed-list"></div>
 <button class="cnation-btn" onclick="cnationGoToTitle()">타이틀로</button>
 </div>
 
@@ -158,12 +170,12 @@ border-radius: 5px;
 <script>
 const cnationScene = new THREE.Scene();
 cnationScene.background = new THREE.Color(0x2c3e50);
-const cnationBounds = { x: 10, y: 18 };
+const cnationBounds = { x: 13, y: 22 };
 const cnationCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 function cnationAdjustCamera() {
 let aspect = window.innerWidth / window.innerHeight;
-cnationCamera.position.set(0, aspect < 0.6 ? 65 : 50, 0);
+cnationCamera.position.set(0, aspect < 0.6 ? 78 : 58, 0);
 cnationCamera.lookAt(0, 0, 0);
 cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
@@ -207,12 +219,14 @@ let cnationScore = 0;
 let cnationCorrectAnswers = 0;
 let cnationGameStage = 0; 
 let cnationBaseInterval = 250;
-let cnationMaxEnemies = 3;
+let cnationMaxEnemies = 2;
+let cnationMaxTime = 20;
 
 let cnationSelectedVocab = [];
 let cnationCurrentQuestion = null;
-let cnationTimeLeft = 10;
+let cnationTimeLeft = 20;
 let cnationLastFrameTime = 0;
+let cnationMissedWords = [];
 
 let cnationPlayerLogic = [];
 let cnationPlayerMeshes = [];
@@ -229,7 +243,7 @@ const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0xff69b4 });
 const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0xffb6c1 });
 const cnationMatEnemyHead = new THREE.MeshPhongMaterial({ color: 0x3498db });
 const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0x87ceeb });
-const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700, emissive: 0xaa8800 });
+const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700 });
 
 window.cnationStartGame = function() {
 let levelKey = document.getElementById('cnation-level-select').value;
@@ -255,13 +269,13 @@ document.getElementById('cnation-label-'+i).style.display = 'none';
 
 function cnationUpdateStage() {
 if(cnationCorrectAnswers >= 20) {
-cnationGameStage = 2; cnationBaseInterval = 100; cnationMaxEnemies = 5;
+cnationGameStage = 2; cnationBaseInterval = 120; cnationMaxEnemies = 4; cnationMaxTime = 15;
 document.getElementById('cnation-game-level').innerText = "상";
 } else if(cnationCorrectAnswers >= 10) {
-cnationGameStage = 1; cnationBaseInterval = 180; cnationMaxEnemies = 4;
+cnationGameStage = 1; cnationBaseInterval = 180; cnationMaxEnemies = 3; cnationMaxTime = 18;
 document.getElementById('cnation-game-level').innerText = "중";
 } else {
-cnationGameStage = 0; cnationBaseInterval = 250; cnationMaxEnemies = 3;
+cnationGameStage = 0; cnationBaseInterval = 250; cnationMaxEnemies = 2; cnationMaxTime = 20;
 document.getElementById('cnation-game-level').innerText = "하";
 }
 while(cnationEnemies.length < cnationMaxEnemies) cnationSpawnEnemy();
@@ -278,6 +292,7 @@ cnationEnemies = [];
 cnationFoodData = [];
 cnationScore = 0;
 cnationCorrectAnswers = 0;
+cnationMissedWords = [];
 document.getElementById('cnation-score-val').innerText = cnationScore;
 cnationPlayerDir = { x: 0, y: -1 };
 cnationPlayerNextDir = { x: 0, y: -1 };
@@ -312,7 +327,7 @@ cnationEnemies.push({ logic: logic, meshes: meshes, dir: { x: 0, y: -1 } });
 function cnationSpawnQuestion() {
 cnationFoodData.forEach(f => cnationScene.remove(f.mesh));
 cnationFoodData = [];
-cnationTimeLeft = 10;
+cnationTimeLeft = cnationMaxTime;
 document.getElementById('cnation-timer-fill').style.background = '#00ff00';
 
 let shuffled = [...cnationSelectedVocab].sort(() => 0.5 - Math.random());
@@ -323,12 +338,16 @@ document.getElementById('cnation-question-text').innerText = cnationCurrentQuest
 for(let i=0; i<4; i++) {
 let valid = false;
 let rx, rz;
-while(!valid) {
-rx = Math.floor(Math.random() * (cnationBounds.x * 2)) - cnationBounds.x;
-rz = Math.floor(Math.random() * (cnationBounds.y * 2)) - cnationBounds.y;
+let attempts = 0;
+while(!valid && attempts < 200) {
+rx = Math.floor(Math.random() * (cnationBounds.x * 2 - 2)) - (cnationBounds.x - 1);
+rz = Math.floor(Math.random() * (cnationBounds.y * 2 - 2)) - (cnationBounds.y - 1);
 valid = true;
 for(let p of cnationPlayerLogic) if(p.x === rx && p.z === rz) valid = false;
-for(let f of cnationFoodData) if(f.x === rx && f.z === rz) valid = false;
+for(let f of cnationFoodData) {
+if(Math.abs(f.x - rx) < 5 && Math.abs(f.z - rz) < 5) valid = false;
+}
+attempts++;
 }
 let isCorrect = (choices[i].en === cnationCurrentQuestion.en);
 let m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
@@ -343,6 +362,7 @@ lbl.style.display = 'block';
 }
 
 function cnationPenalty() {
+cnationMissedWords.push(cnationCurrentQuestion);
 cnationScore -= 5;
 if(cnationScore < 0) cnationScore = 0;
 document.getElementById('cnation-score-val').innerText = cnationScore;
@@ -393,6 +413,18 @@ else if (dy < -30 && cnationPlayerDir.y === 0) cnationPlayerNextDir = { x: 0, y:
 function cnationGameOver() {
 cnationGameState = 'GAMEOVER';
 document.getElementById('cnation-final-score').innerText = cnationScore;
+document.getElementById('cnation-final-correct').innerText = cnationCorrectAnswers;
+
+let missedHtml = "<b>[오답 및 놓친 단어]</b><br><br>";
+if(cnationMissedWords.length === 0) {
+missedHtml += "틀린 단어가 없습니다!<br>완벽합니다!";
+} else {
+cnationMissedWords.forEach(w => {
+missedHtml += w.en + " : " + w.ko + "<br>";
+});
+}
+document.getElementById('cnation-missed-list').innerHTML = missedHtml;
+
 document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 }
@@ -488,7 +520,7 @@ cnationLastFrameTime = time;
 if (cnationGameState === 'PLAYING') {
 cnationTimeLeft -= dt;
 let fill = document.getElementById('cnation-timer-fill');
-fill.style.width = (cnationTimeLeft / 10 * 100) + '%';
+fill.style.width = (cnationTimeLeft / cnationMaxTime * 100) + '%';
 if(cnationTimeLeft < 4) fill.style.background = '#ff0000';
 if(cnationTimeLeft <= 0) cnationPenalty();
 
@@ -499,14 +531,16 @@ if (time - cnationLastTickTime > cnationBaseInterval) {
 cnationTick();
 cnationLastTickTime = time;
 }
+
+let lerpFactor = 0.15;
 for (let i = 0; i < cnationPlayerMeshes.length; i++) {
 let target = new THREE.Vector3(cnationPlayerLogic[i].x, 0.5, cnationPlayerLogic[i].z);
-cnationPlayerMeshes[i].position.lerp(target, 0.4);
+cnationPlayerMeshes[i].position.lerp(target, lerpFactor);
 }
 cnationEnemies.forEach(e => {
 for(let i=0; i<e.meshes.length; i++) {
 let target = new THREE.Vector3(e.logic[i].x, 0.5, e.logic[i].z);
-e.meshes[i].position.lerp(target, 0.4);
+e.meshes[i].position.lerp(target, lerpFactor);
 }
 });
 cnationUpdateLabels();
