@@ -168,9 +168,19 @@ border: 1px solid #ffb6c1;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="./word.js"></script>
 <script>
-const cnationAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let cnationAudioCtx;
+
+function cnationInitAudio() {
+if (!cnationAudioCtx) {
+cnationAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+if (cnationAudioCtx.state === 'suspended') {
+cnationAudioCtx.resume();
+}
+}
 
 function cnationPlaySound(type) {
+if (!cnationAudioCtx) return;
 if (cnationAudioCtx.state === 'suspended') {
 cnationAudioCtx.resume();
 }
@@ -210,6 +220,7 @@ osc.stop(now + 0.4);
 const cnationScene = new THREE.Scene();
 cnationScene.background = new THREE.Color(0x34495e);
 
+// 완벽한 정사각형 경기장 설정 (11 x 11)
 const cnationBounds = { x: 11, y: 11 };
 const cnationCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -219,11 +230,12 @@ cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
 
 let fovRad = (cnationCamera.fov * Math.PI) / 180;
+// 가로 폭 기준으로만 카메라 거리를 고정 계산
 let requiredWidth = cnationBounds.x * 2 + 2;
-
 let finalDistance = (requiredWidth / 2) / (Math.tan(fovRad / 2) * aspect);
 
-let topOffset = -2.0;
+// UI에 가려지지 않도록 화면 상단으로부터 약간 아래로 중심점 이동
+let topOffset = -2.5;
 cnationCamera.position.set(0, finalDistance, topOffset);
 cnationCamera.lookAt(0, 0, topOffset);
 }
@@ -296,6 +308,7 @@ const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
 const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700 });
 
 window.cnationStartGame = function() {
+cnationInitAudio(); // 게임 시작 시 오디오 권한 잠금 해제
 let levelKey = document.getElementById('cnation-level-select').value;
 cnationSelectedVocab = cnationWordDB[levelKey];
 document.getElementById('cnation-start-screen').style.display = 'none';
