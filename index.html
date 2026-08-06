@@ -177,6 +177,13 @@ cnationAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
 if (cnationAudioCtx.state === 'suspended') {
 cnationAudioCtx.resume();
 }
+const osc = cnationAudioCtx.createOscillator();
+const gain = cnationAudioCtx.createGain();
+osc.connect(gain);
+gain.connect(cnationAudioCtx.destination);
+gain.gain.value = 0;
+osc.start(cnationAudioCtx.currentTime);
+osc.stop(cnationAudioCtx.currentTime + 0.01);
 }
 
 function cnationPlaySound(type) {
@@ -220,7 +227,6 @@ osc.stop(now + 0.4);
 const cnationScene = new THREE.Scene();
 cnationScene.background = new THREE.Color(0x34495e);
 
-// 완벽한 정사각형 경기장 설정 (11 x 11)
 const cnationBounds = { x: 11, y: 11 };
 const cnationCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 
@@ -230,11 +236,9 @@ cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
 
 let fovRad = (cnationCamera.fov * Math.PI) / 180;
-// 가로 폭 기준으로만 카메라 거리를 고정 계산
 let requiredWidth = cnationBounds.x * 2 + 2;
 let finalDistance = (requiredWidth / 2) / (Math.tan(fovRad / 2) * aspect);
 
-// UI에 가려지지 않도록 화면 상단으로부터 약간 아래로 중심점 이동
 let topOffset = -2.5;
 cnationCamera.position.set(0, finalDistance, topOffset);
 cnationCamera.lookAt(0, 0, topOffset);
@@ -308,7 +312,7 @@ const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
 const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700 });
 
 window.cnationStartGame = function() {
-cnationInitAudio(); // 게임 시작 시 오디오 권한 잠금 해제
+cnationInitAudio();
 let levelKey = document.getElementById('cnation-level-select').value;
 cnationSelectedVocab = cnationWordDB[levelKey];
 document.getElementById('cnation-start-screen').style.display = 'none';
@@ -506,11 +510,19 @@ e.dir = turns[Math.floor(Math.random() * 2)];
 }
 let nx = e.logic[0].x + e.dir.x;
 let nz = e.logic[0].z + e.dir.y;
-if (nx < -cnationBounds.x || nx > cnationBounds.x || nz < -cnationBounds.y || nz > cnationBounds.y) {
+let attempts = 0;
+while ((nx < -cnationBounds.x || nx > cnationBounds.x || nz < -cnationBounds.y || nz > cnationBounds.y) && attempts < 10) {
 let turns = e.dir.x === 0 ? [{x:1, y:0}, {x:-1, y:0}] : [{x:0, y:1}, {x:0, y:-1}];
 e.dir = turns[Math.floor(Math.random() * 2)];
-e.nextX = e.logic[0].x + e.dir.x; e.nextZ = e.logic[0].z + e.dir.y;
-} else { e.nextX = nx; e.nextZ = nz; }
+nx = e.logic[0].x + e.dir.x;
+nz = e.logic[0].z + e.dir.y;
+attempts++;
+}
+if(nx < -cnationBounds.x) { nx = -cnationBounds.x; e.dir = {x:1, y:0}; }
+if(nx > cnationBounds.x) { nx = cnationBounds.x; e.dir = {x:-1, y:0}; }
+if(nz < -cnationBounds.y) { nz = -cnationBounds.y; e.dir = {x:0, y:1}; }
+if(nz > cnationBounds.y) { nz = cnationBounds.y; e.dir = {x:0, y:-1}; }
+e.nextX = nx; e.nextZ = nz;
 });
 
 if (px < -cnationBounds.x || px > cnationBounds.x || pz < -cnationBounds.y || pz > cnationBounds.y) {
