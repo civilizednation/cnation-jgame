@@ -170,7 +170,9 @@ border: 1px solid #ffb6c1;
 <script>
 const cnationScene = new THREE.Scene();
 cnationScene.background = new THREE.Color(0x34495e);
-const cnationBounds = { x: 11, y: 22 };
+
+// 세로 크기 축소 (y: 22 -> 15)
+const cnationBounds = { x: 11, y: 15 };
 const cnationCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 function cnationAdjustCamera() {
@@ -179,7 +181,7 @@ cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
 
 let fovRad = (cnationCamera.fov * Math.PI) / 180;
-let requiredHeight = cnationBounds.y * 2 + 7;
+let requiredHeight = cnationBounds.y * 2 + 6;
 let requiredWidth = cnationBounds.x * 2 + 1;
 
 let distanceForHeight = (requiredHeight / 2) / Math.tan(fovRad / 2);
@@ -187,7 +189,8 @@ let distanceForWidth = (requiredWidth / 2) / (Math.tan(fovRad / 2) * aspect);
 
 let finalDistance = Math.min(distanceForHeight, distanceForWidth);
 
-let topOffset = -3.8;
+// UI 바 하단에 상단 벽이 딱 들어맞도록 Z 위치 조정 (-1.8)
+let topOffset = -1.8;
 cnationCamera.position.set(0, finalDistance, topOffset);
 cnationCamera.lookAt(0, 0, topOffset);
 }
@@ -359,7 +362,7 @@ rz = Math.floor(Math.random() * (cnationBounds.y * 2 - 4)) - (cnationBounds.y - 
 valid = true;
 for(let p of cnationPlayerLogic) if(p.x === rx && p.z === rz) valid = false;
 for(let f of cnationFoodData) {
-if(Math.abs(f.x - rx) < 5 && Math.abs(f.z - rz) < 5) valid = false;
+if(Math.abs(f.x - rx) < 4 && Math.abs(f.z - rz) < 4) valid = false;
 }
 attempts++;
 }
