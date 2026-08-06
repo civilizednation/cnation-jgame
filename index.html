@@ -24,11 +24,11 @@ z-index: 30;
 }
 #cnation-game-over {
 display: none;
-background: rgba(0, 0, 0, 0.7);
+background: rgba(0, 0, 0, 0.8);
 }
 h1 {
 color: #ff1493;
-font-size: 36px;
+font-size: 32px;
 margin-bottom: 30px;
 text-shadow: 2px 2px #fff;
 text-align: center;
@@ -41,14 +41,14 @@ text-shadow: 2px 2px #000;
 background-color: #ffb6c1;
 color: white;
 border: none;
-padding: 15px 40px;
+padding: 12px 30px;
 margin: 10px;
-font-size: 22px;
+font-size: 20px;
 font-weight: bold;
 border-radius: 30px;
 cursor: pointer;
 box-shadow: 0 5px 0 #ff69b4;
-width: 200px;
+width: 220px;
 }
 .cnation-btn:active {
 transform: translateY(5px);
@@ -64,7 +64,7 @@ display: none;
 pointer-events: none;
 }
 #cnation-score-text {
-font-size: 24px;
+font-size: 22px;
 font-weight: bold;
 color: #fff;
 margin: 0;
@@ -76,9 +76,9 @@ text-shadow: 2px 2px 0px #000;
 
 <div id="cnation-start-screen">
 <h1>명국이의<br>지렁이 게임</h1>
-<button class="cnation-btn" onclick="cnationStartGame('easy')">시작 (하)</button>
-<button class="cnation-btn" onclick="cnationStartGame('normal')">시작 (중)</button>
-<button class="cnation-btn" onclick="cnationStartGame('hard')">시작 (상)</button>
+<button class="cnation-btn" onclick="cnationStartGame('easy')">시작 (하 - 적 1마리)</button>
+<button class="cnation-btn" onclick="cnationStartGame('normal')">시작 (중 - 적 3마리)</button>
+<button class="cnation-btn" onclick="cnationStartGame('hard')">시작 (상 - 적 5마리)</button>
 </div>
 
 <div id="cnation-game-ui">
@@ -96,10 +96,20 @@ text-shadow: 2px 2px 0px #000;
 const cnationScene = new THREE.Scene();
 cnationScene.background = new THREE.Color(0x2c3e50);
 
-const cnationBounds = { x: 12, y: 18 };
+const cnationBounds = { x: 10, y: 18 };
 const cnationCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-cnationCamera.position.set(0, 35, 0);
+
+function cnationAdjustCamera() {
+let aspect = window.innerWidth / window.innerHeight;
+if (aspect < 0.6) {
+cnationCamera.position.set(0, 65, 0);
+} else {
+cnationCamera.position.set(0, 50, 0);
+}
 cnationCamera.lookAt(0, 0, 0);
+cnationCamera.aspect = aspect;
+cnationCamera.updateProjectionMatrix();
+}
 
 const cnationRenderer = new THREE.WebGLRenderer({ antialias: true });
 cnationRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -128,15 +138,12 @@ const cnationWallMat = new THREE.MeshPhongMaterial({ color: 0x95a5a6 });
 const cnationWallTop = new THREE.Mesh(cnationWallGeoX, cnationWallMat);
 cnationWallTop.position.set(0, 0, -cnationBounds.y - 1);
 cnationScene.add(cnationWallTop);
-
 const cnationWallBot = new THREE.Mesh(cnationWallGeoX, cnationWallMat);
 cnationWallBot.position.set(0, 0, cnationBounds.y + 1);
 cnationScene.add(cnationWallBot);
-
 const cnationWallLeft = new THREE.Mesh(cnationWallGeoY, cnationWallMat);
 cnationWallLeft.position.set(-cnationBounds.x - 1, 0, 0);
 cnationScene.add(cnationWallLeft);
-
 const cnationWallRight = new THREE.Mesh(cnationWallGeoY, cnationWallMat);
 cnationWallRight.position.set(cnationBounds.x + 1, 0, 0);
 cnationScene.add(cnationWallRight);
@@ -144,18 +151,19 @@ cnationScene.add(cnationWallRight);
 let cnationGameState = 'TITLE';
 let cnationScore = 0;
 let cnationBaseInterval = 200;
+let cnationMaxEnemies = 1;
 
 let cnationPlayerLogic = [];
 let cnationPlayerMeshes = [];
 let cnationPlayerDir = { x: 0, y: -1 };
 let cnationPlayerNextDir = { x: 0, y: -1 };
-let cnationPlayerLastTime = 0;
+let cnationLastTickTime = 0;
 
 let cnationEnemies = [];
-let cnationFoodMeshes = [];
+let cnationFoodData = [];
 
 const cnationGeoSphere = new THREE.SphereGeometry(0.5, 32, 32);
-const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+const cnationGeoBox = new THREE.BoxGeometry(0.6, 0.6, 0.6);
 
 const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0xff69b4 });
 const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0xffb6c1 });
@@ -167,11 +175,10 @@ window.cnationStartGame = function(difficulty) {
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'block';
-
-if(difficulty === 'easy') cnationBaseInterval = 250;
-if(difficulty === 'normal') cnationBaseInterval = 150;
-if(difficulty === 'hard') cnationBaseInterval = 80;
-
+cnationAdjustCamera();
+if(difficulty === 'easy') { cnationBaseInterval = 250; cnationMaxEnemies = 1; }
+if(difficulty === 'normal') { cnationBaseInterval = 150; cnationMaxEnemies = 3; }
+if(difficulty === 'hard') { cnationBaseInterval = 80; cnationMaxEnemies = 5; }
 cnationResetWorld();
 cnationGameState = 'PLAYING';
 };
@@ -186,18 +193,17 @@ cnationGameState = 'TITLE';
 function cnationResetWorld() {
 cnationPlayerMeshes.forEach(m => cnationScene.remove(m));
 cnationEnemies.forEach(e => e.meshes.forEach(m => cnationScene.remove(m)));
-cnationFoodMeshes.forEach(m => cnationScene.remove(m));
+cnationFoodData.forEach(f => cnationScene.remove(f.mesh));
 
 cnationPlayerLogic = [];
 cnationPlayerMeshes = [];
 cnationEnemies = [];
-cnationFoodMeshes = [];
-
+cnationFoodData = [];
 cnationScore = 0;
 document.getElementById('cnation-score-val').innerText = cnationScore;
 cnationPlayerDir = { x: 0, y: -1 };
 cnationPlayerNextDir = { x: 0, y: -1 };
-cnationPlayerLastTime = performance.now();
+cnationLastTickTime = performance.now();
 
 for (let i = 0; i < 3; i++) {
 cnationPlayerLogic.push({ x: 0, z: i });
@@ -206,39 +212,40 @@ m.position.set(0, 0.5, i);
 cnationPlayerMeshes.push(m);
 cnationScene.add(m);
 }
-
-cnationSpawnEnemy(-5, 5);
-cnationSpawnEnemy(5, -5);
-cnationSpawnFood();
+while(cnationEnemies.length < cnationMaxEnemies) {
+cnationSpawnEnemy();
+}
 cnationSpawnFood();
 }
 
-function cnationSpawnEnemy(startX, startZ) {
+function cnationSpawnEnemy() {
+let rx = Math.floor(Math.random() * (cnationBounds.x * 2 - 4)) - (cnationBounds.x - 2);
+let rz = (Math.random() < 0.5) ? cnationBounds.y - 2 : -cnationBounds.y + 2;
 let logic = [];
 let meshes = [];
 for (let i = 0; i < 3; i++) {
-logic.push({ x: startX, z: startZ + i });
+logic.push({ x: rx, z: rz + i });
 let m = new THREE.Mesh(cnationGeoSphere, i === 0 ? cnationMatEnemyHead : cnationMatEnemyBody);
-m.position.set(startX, 0.5, startZ + i);
+m.position.set(rx, 0.5, rz + i);
 meshes.push(m);
 cnationScene.add(m);
 }
 cnationEnemies.push({
 logic: logic,
 meshes: meshes,
-dir: { x: 0, y: -1 },
-lastTime: performance.now(),
-interval: 300
+dir: { x: 0, y: -1 }
 });
 }
 
 function cnationSpawnFood() {
+while(cnationFoodData.length < 4) {
 let rx = Math.floor(Math.random() * (cnationBounds.x * 2)) - cnationBounds.x;
 let rz = Math.floor(Math.random() * (cnationBounds.y * 2)) - cnationBounds.y;
 let m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
 m.position.set(rx, 0.5, rz);
-cnationFoodMeshes.push(m);
+cnationFoodData.push({ x: rx, z: rz, mesh: m });
 cnationScene.add(m);
+}
 }
 
 let cnationTouchX = 0;
@@ -267,73 +274,91 @@ document.getElementById('cnation-final-score').innerText = cnationScore;
 document.getElementById('cnation-game-over').style.display = 'flex';
 }
 
-function cnationUpdateAI(time) {
-cnationEnemies.forEach(enemy => {
-if (time - enemy.lastTime > enemy.interval) {
-let head = enemy.logic[0];
-if(Math.random() < 0.2) {
-if(enemy.dir.x === 0) enemy.dir = Math.random() < 0.5 ? {x:1, y:0} : {x:-1, y:0};
-else enemy.dir = Math.random() < 0.5 ? {x:0, y:1} : {x:0, y:-1};
-}
-let nx = head.x + enemy.dir.x;
-let nz = head.z + enemy.dir.y;
-if (nx < -cnationBounds.x || nx > cnationBounds.x || nz < -cnationBounds.y || nz > cnationBounds.y) {
-enemy.dir.x *= -1;
-enemy.dir.y *= -1;
-nx = head.x + enemy.dir.x;
-nz = head.z + enemy.dir.y;
-}
-for (let i = enemy.logic.length - 1; i > 0; i--) {
-enemy.logic[i].x = enemy.logic[i - 1].x;
-enemy.logic[i].z = enemy.logic[i - 1].z;
-}
-enemy.logic[0].x = nx;
-enemy.logic[0].z = nz;
-enemy.lastTime = time;
-}
-for(let i=0; i<enemy.meshes.length; i++) {
-let t = new THREE.Vector3(enemy.logic[i].x, 0.5, enemy.logic[i].z);
-enemy.meshes[i].position.lerp(t, 0.4);
-}
-});
-}
-
-function cnationAnimate(time) {
-requestAnimationFrame(cnationAnimate);
-
-if (cnationGameState === 'PLAYING') {
-cnationFoodMeshes.forEach(f => {
-f.rotation.x += 0.05;
-f.rotation.y += 0.05;
-});
-
-if (time - cnationPlayerLastTime > cnationBaseInterval) {
+function cnationTick() {
 cnationPlayerDir = cnationPlayerNextDir;
-let nx = cnationPlayerLogic[0].x + cnationPlayerDir.x;
-let nz = cnationPlayerLogic[0].z + cnationPlayerDir.y;
+let px = cnationPlayerLogic[0].x + cnationPlayerDir.x;
+let pz = cnationPlayerLogic[0].z + cnationPlayerDir.y;
 
+cnationEnemies.forEach(e => {
+if(Math.random() < 0.15) {
+let turns = e.dir.x === 0 ? [{x:1, y:0}, {x:-1, y:0}] : [{x:0, y:1}, {x:0, y:-1}];
+e.dir = turns[Math.floor(Math.random() * 2)];
+}
+let nx = e.logic[0].x + e.dir.x;
+let nz = e.logic[0].z + e.dir.y;
 if (nx < -cnationBounds.x || nx > cnationBounds.x || nz < -cnationBounds.y || nz > cnationBounds.y) {
+let turns = e.dir.x === 0 ? [{x:1, y:0}, {x:-1, y:0}] : [{x:0, y:1}, {x:0, y:-1}];
+e.dir = turns[Math.floor(Math.random() * 2)];
+e.nextX = e.logic[0].x + e.dir.x;
+e.nextZ = e.logic[0].z + e.dir.y;
+} else {
+e.nextX = nx;
+e.nextZ = nz;
+}
+});
+
+if (px < -cnationBounds.x || px > cnationBounds.x || pz < -cnationBounds.y || pz > cnationBounds.y) {
 cnationGameOver(); return;
 }
-for (let i = 1; i < cnationPlayerLogic.length; i++) {
-if (cnationPlayerLogic[i].x === nx && cnationPlayerLogic[i].z === nz) {
-cnationGameOver(); return;
+for(let i=1; i<cnationPlayerLogic.length; i++) {
+if(px === cnationPlayerLogic[i].x && pz === cnationPlayerLogic[i].z) { cnationGameOver(); return; }
 }
-}
-for (let e of cnationEnemies) {
-if (e.logic[0].x === nx && e.logic[0].z === nz) {
-cnationGameOver(); return;
+for(let i=0; i<cnationEnemies.length; i++) {
+for(let j=0; j<cnationEnemies[i].logic.length; j++) {
+if(px === cnationEnemies[i].logic[j].x && pz === cnationEnemies[i].logic[j].z) { cnationGameOver(); return; }
 }
 }
 
-let ateFoodIndex = -1;
-for (let i = 0; i < cnationFoodMeshes.length; i++) {
-if (Math.abs(nx - cnationFoodMeshes[i].position.x) < 0.5 && Math.abs(nz - cnationFoodMeshes[i].position.z) < 0.5) {
-ateFoodIndex = i; break;
+let deadEnemies = [];
+cnationEnemies.forEach((e, idx) => {
+let hit = false;
+for(let j=0; j<cnationPlayerLogic.length; j++) {
+if(e.nextX === cnationPlayerLogic[j].x && e.nextZ === cnationPlayerLogic[j].z) hit = true;
 }
+for(let i=0; i<cnationEnemies.length; i++) {
+if(i === idx) continue;
+for(let j=0; j<cnationEnemies[i].logic.length; j++) {
+if(e.nextX === cnationEnemies[i].logic[j].x && e.nextZ === cnationEnemies[i].logic[j].z) hit = true;
+}
+}
+if(hit) {
+deadEnemies.push(idx);
+} else {
+let ateIndex = -1;
+for(let f=0; f<cnationFoodData.length; f++) {
+if(e.nextX === cnationFoodData[f].x && e.nextZ === cnationFoodData[f].z) { ateIndex = f; break; }
+}
+if(ateIndex !== -1) {
+let m = new THREE.Mesh(cnationGeoSphere, cnationMatEnemyBody);
+e.meshes.push(m);
+cnationScene.add(m);
+e.logic.push({x: e.logic[e.logic.length-1].x, z: e.logic[e.logic.length-1].z});
+cnationScene.remove(cnationFoodData[ateIndex].mesh);
+cnationFoodData.splice(ateIndex, 1);
+}
+for (let i = e.logic.length - 1; i > 0; i--) {
+e.logic[i].x = e.logic[i - 1].x;
+e.logic[i].z = e.logic[i - 1].z;
+}
+e.logic[0].x = e.nextX;
+e.logic[0].z = e.nextZ;
+}
+});
+
+for(let i=deadEnemies.length-1; i>=0; i--) {
+let eIdx = deadEnemies[i];
+cnationEnemies[eIdx].meshes.forEach(m => cnationScene.remove(m));
+cnationEnemies.splice(eIdx, 1);
+}
+while(cnationEnemies.length < cnationMaxEnemies) {
+cnationSpawnEnemy();
 }
 
-if (ateFoodIndex !== -1) {
+let pAteIndex = -1;
+for(let f=0; f<cnationFoodData.length; f++) {
+if(px === cnationFoodData[f].x && pz === cnationFoodData[f].z) { pAteIndex = f; break; }
+}
+if(pAteIndex !== -1) {
 let m = new THREE.Mesh(cnationGeoSphere, cnationMatPlayerBody);
 cnationPlayerMeshes.push(m);
 cnationScene.add(m);
@@ -342,37 +367,50 @@ cnationScore += 10;
 document.getElementById('cnation-score-val').innerText = cnationScore;
 cnationEatSound.currentTime = 0;
 cnationEatSound.play().catch(()=>{});
-cnationScene.remove(cnationFoodMeshes[ateFoodIndex]);
-cnationFoodMeshes.splice(ateFoodIndex, 1);
-cnationSpawnFood();
+cnationScene.remove(cnationFoodData[pAteIndex].mesh);
+cnationFoodData.splice(pAteIndex, 1);
 }
 
 for (let i = cnationPlayerLogic.length - 1; i > 0; i--) {
 cnationPlayerLogic[i].x = cnationPlayerLogic[i - 1].x;
 cnationPlayerLogic[i].z = cnationPlayerLogic[i - 1].z;
 }
-cnationPlayerLogic[0].x = nx;
-cnationPlayerLogic[0].z = nz;
-cnationPlayerLastTime = time;
+cnationPlayerLogic[0].x = px;
+cnationPlayerLogic[0].z = pz;
+cnationSpawnFood();
 }
 
+function cnationAnimate(time) {
+requestAnimationFrame(cnationAnimate);
+if (cnationGameState === 'PLAYING') {
+cnationFoodData.forEach(f => {
+f.mesh.rotation.x += 0.05;
+f.mesh.rotation.y += 0.05;
+});
+if (time - cnationLastTickTime > cnationBaseInterval) {
+cnationTick();
+cnationLastTickTime = time;
+}
 for (let i = 0; i < cnationPlayerMeshes.length; i++) {
 let target = new THREE.Vector3(cnationPlayerLogic[i].x, 0.5, cnationPlayerLogic[i].z);
 cnationPlayerMeshes[i].position.lerp(target, 0.4);
 }
-
-cnationUpdateAI(time);
+cnationEnemies.forEach(e => {
+for(let i=0; i<e.meshes.length; i++) {
+let target = new THREE.Vector3(e.logic[i].x, 0.5, e.logic[i].z);
+e.meshes[i].position.lerp(target, 0.4);
 }
-
+});
+}
 cnationRenderer.render(cnationScene, cnationCamera);
 }
 
 window.addEventListener('resize', () => {
-cnationCamera.aspect = window.innerWidth / window.innerHeight;
-cnationCamera.updateProjectionMatrix();
+cnationAdjustCamera();
 cnationRenderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+cnationAdjustCamera();
 requestAnimationFrame(cnationAnimate);
 </script>
 </body>
