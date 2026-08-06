@@ -168,11 +168,49 @@ border: 1px solid #ffb6c1;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="./word.js"></script>
 <script>
+const cnationAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function cnationPlaySound(type) {
+if (cnationAudioCtx.state === 'suspended') {
+cnationAudioCtx.resume();
+}
+const osc = cnationAudioCtx.createOscillator();
+const gain = cnationAudioCtx.createGain();
+osc.connect(gain);
+gain.connect(cnationAudioCtx.destination);
+const now = cnationAudioCtx.currentTime;
+
+if (type === 'correct') {
+osc.type = 'sine';
+osc.frequency.setValueAtTime(523.25, now);
+osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.15);
+gain.gain.setValueAtTime(0.3, now);
+gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+osc.start(now);
+osc.stop(now + 0.15);
+} else if (type === 'wrong') {
+osc.type = 'sawtooth';
+osc.frequency.setValueAtTime(180, now);
+osc.frequency.linearRampToValueAtTime(90, now + 0.2);
+gain.gain.setValueAtTime(0.3, now);
+gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+osc.start(now);
+osc.stop(now + 0.2);
+} else if (type === 'die') {
+osc.type = 'square';
+osc.frequency.setValueAtTime(300, now);
+osc.frequency.linearRampToValueAtTime(60, now + 0.4);
+gain.gain.setValueAtTime(0.3, now);
+gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+osc.start(now);
+osc.stop(now + 0.4);
+}
+}
+
 const cnationScene = new THREE.Scene();
 cnationScene.background = new THREE.Color(0x34495e);
 
-// 세로 크기 추가 축소 (y: 10 -> 7) : 사용자가 표시한 영역에 맞춰 경기장을 더 축소
-const cnationBounds = { x: 11, y: 7 };
+const cnationBounds = { x: 11, y: 11 };
 const cnationCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
 
 function cnationAdjustCamera() {
@@ -181,16 +219,11 @@ cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
 
 let fovRad = (cnationCamera.fov * Math.PI) / 180;
-let requiredHeight = cnationBounds.y * 2 + 6;
-let requiredWidth = cnationBounds.x * 2 + 1;
+let requiredWidth = cnationBounds.x * 2 + 2;
 
-let distanceForHeight = (requiredHeight / 2) / Math.tan(fovRad / 2);
-let distanceForWidth = (requiredWidth / 2) / (Math.tan(fovRad / 2) * aspect);
+let finalDistance = (requiredWidth / 2) / (Math.tan(fovRad / 2) * aspect);
 
-let finalDistance = Math.min(distanceForHeight, distanceForWidth);
-
-// UI 바 하단에 상단 벽이 딱 들어맞도록 Z 위치 조정
-let topOffset = -0.84;
+let topOffset = -2.0;
 cnationCamera.position.set(0, finalDistance, topOffset);
 cnationCamera.lookAt(0, 0, topOffset);
 }
@@ -379,6 +412,7 @@ lbl.style.display = 'block';
 }
 
 function cnationPenalty() {
+cnationPlaySound('wrong');
 cnationMissedWords.push(cnationCurrentQuestion);
 cnationScore -= 5;
 if(cnationScore < 0) cnationScore = 0;
@@ -428,6 +462,7 @@ else if (dy < -30 && cnationPlayerDir.y === 0) cnationPlayerNextDir = { x: 0, y:
 });
 
 function cnationGameOver() {
+cnationPlaySound('die');
 cnationGameState = 'GAMEOVER';
 document.getElementById('cnation-final-score').innerText = cnationScore;
 document.getElementById('cnation-final-correct').innerText = cnationCorrectAnswers;
@@ -508,6 +543,7 @@ if(px === cnationFoodData[f].x && pz === cnationFoodData[f].z) { pAteIndex = f; 
 }
 if(pAteIndex !== -1) {
 if(cnationFoodData[pAteIndex].isCorrect) {
+cnationPlaySound('correct');
 let m = new THREE.Mesh(cnationGeoSphere, cnationMatPlayerBody);
 cnationPlayerMeshes.push(m); cnationScene.add(m);
 cnationPlayerLogic.push({x: cnationPlayerLogic[cnationPlayerLogic.length-1].x, z: cnationPlayerLogic[cnationPlayerLogic.length-1].z});
