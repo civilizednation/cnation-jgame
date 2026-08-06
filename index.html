@@ -179,13 +179,15 @@ cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
 
 let fovRad = (cnationCamera.fov * Math.PI) / 180;
-let requiredHeight = cnationBounds.y * 2 + 2; 
-let requiredWidth = cnationBounds.x * 2 + 2;
+let requiredHeight = cnationBounds.y * 2 + 1;
+let requiredWidth = cnationBounds.x * 2 + 1;
 
 let distanceForHeight = (requiredHeight / 2) / Math.tan(fovRad / 2);
 let distanceForWidth = (requiredWidth / 2) / (Math.tan(fovRad / 2) * aspect);
 
-let finalDistance = Math.max(distanceForHeight, distanceForWidth);
+// 화면을 꽉 채우기 위해 더 "적게" 필요한 쪽 거리를 사용 (Math.min)
+// -> 카메라가 더 가까워져 확대되며, 비율 차이만큼 벽 일부가 화면 밖으로 살짝 잘릴 수 있음
+let finalDistance = Math.min(distanceForHeight, distanceForWidth);
 
 cnationCamera.position.set(0, finalDistance, 0);
 cnationCamera.lookAt(0, 0, 0);
