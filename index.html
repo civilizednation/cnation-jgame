@@ -77,7 +77,7 @@ box-shadow: none;
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-1. 기본 환경 설정 (cnation-setup)
+// 1. 기본 환경 설정
 const cnationScene = new THREE.Scene();
 cnationScene.background = new THREE.Color(0xfff0f5);
 
@@ -89,18 +89,18 @@ const cnationRenderer = new THREE.WebGLRenderer({ antialias: true });
 cnationRenderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(cnationRenderer.domElement);
 
-2. 조명 설정 (cnation-lights)
+// 2. 조명 설정
 const cnationAmbientLight = new THREE.AmbientLight(0xffffff, 0.6);
 cnationScene.add(cnationAmbientLight);
 const cnationDirLight = new THREE.DirectionalLight(0xffffff, 0.8);
 cnationDirLight.position.set(10, 20, 10);
 cnationScene.add(cnationDirLight);
 
-3. 사운드 객체 설정 (cnation-audio)
+// 3. 사운드 객체 설정
 const cnationEatSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
 const cnationDieSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3');
 
-4. 게임 변수 및 에셋 (cnation-variables)
+// 4. 게임 변수 및 에셋
 let cnationSnake = [];
 let cnationFood;
 let cnationDirection = { x: 0, y: -1 };
@@ -119,142 +119,142 @@ const cnationBodyMat = new THREE.MeshPhongMaterial({ color: 0xffb6c1, shininess:
 const cnationFoodGeo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
 const cnationFoodMat = new THREE.MeshPhongMaterial({ color: 0xffd700, shininess: 100 });
 
-5. 초기화 함수 (cnation-init)
+// 5. 초기화 함수
 function cnationInitGame() {
-    cnationSnake.forEach(segment => cnationScene.remove(segment));
-    cnationSnake = [];
-    if (cnationFood) cnationScene.remove(cnationFood);
-    
-    cnationScore = 0;
-    cnationMoveInterval = 200;
-    cnationDirection = { x: 0, y: -1 };
-    cnationNextDirection = { x: 0, y: -1 };
-    cnationIsGameOver = false;
-    document.getElementById('cnation-score-val').innerText = cnationScore;
-    document.getElementById('cnation-game-over').style.display = 'none';
+cnationSnake.forEach(segment => cnationScene.remove(segment));
+cnationSnake = [];
+if (cnationFood) cnationScene.remove(cnationFood);
 
-    for (let i = 0; i < 3; i++) {
-        const segment = new THREE.Mesh(cnationBodyGeo, i === 0 ? cnationHeadMat : cnationBodyMat);
-        segment.position.set(0, 0.5, i * cnationGridSize);
-        cnationSnake.push(segment);
-        cnationScene.add(segment);
-    }
-    cnationSpawnFood();
+cnationScore = 0;
+cnationMoveInterval = 200;
+cnationDirection = { x: 0, y: -1 };
+cnationNextDirection = { x: 0, y: -1 };
+cnationIsGameOver = false;
+document.getElementById('cnation-score-val').innerText = cnationScore;
+document.getElementById('cnation-game-over').style.display = 'none';
+
+for (let i = 0; i < 3; i++) {
+const segment = new THREE.Mesh(cnationBodyGeo, i === 0 ? cnationHeadMat : cnationBodyMat);
+segment.position.set(0, 0.5, i * cnationGridSize);
+cnationSnake.push(segment);
+cnationScene.add(segment);
+}
+cnationSpawnFood();
 }
 
 function cnationSpawnFood() {
-    let validPosition = false;
-    let rx, rz;
-    while (!validPosition) {
-        rx = Math.floor(Math.random() * (cnationBounds.x * 2)) - cnationBounds.x;
-        rz = Math.floor(Math.random() * (cnationBounds.y * 2)) - cnationBounds.y;
-        validPosition = true;
-        for (let i = 0; i < cnationSnake.length; i++) {
-            if (cnationSnake[i].position.x === rx && cnationSnake[i].position.z === rz) {
-                validPosition = false;
-                break;
-            }
-        }
-    }
-    if (!cnationFood) {
-        cnationFood = new THREE.Mesh(cnationFoodGeo, cnationFoodMat);
-        cnationScene.add(cnationFood);
-    }
-    cnationFood.position.set(rx, 0.5, rz);
+let validPosition = false;
+let rx, rz;
+while (!validPosition) {
+rx = Math.floor(Math.random() * (cnationBounds.x * 2)) - cnationBounds.x;
+rz = Math.floor(Math.random() * (cnationBounds.y * 2)) - cnationBounds.y;
+validPosition = true;
+for (let i = 0; i < cnationSnake.length; i++) {
+if (cnationSnake[i].position.x === rx && cnationSnake[i].position.z === rz) {
+validPosition = false;
+break;
+}
+}
+}
+if (!cnationFood) {
+cnationFood = new THREE.Mesh(cnationFoodGeo, cnationFoodMat);
+cnationScene.add(cnationFood);
+}
+cnationFood.position.set(rx, 0.5, rz);
 }
 
-6. 모바일 터치 스와이프 컨트롤 (cnation-controls)
+// 6. 모바일 터치 스와이프 컨트롤
 let cnationTouchStartX = 0;
 let cnationTouchStartY = 0;
 
 window.addEventListener('touchstart', (e) => {
-    cnationTouchStartX = e.changedTouches[0].screenX;
-    cnationTouchStartY = e.changedTouches[0].screenY;
+cnationTouchStartX = e.changedTouches[0].screenX;
+cnationTouchStartY = e.changedTouches[0].screenY;
 });
 
 window.addEventListener('touchend', (e) => {
-    if (cnationIsGameOver) return;
-    let touchEndX = e.changedTouches[0].screenX;
-    let touchEndY = e.changedTouches[0].screenY;
-    let dx = touchEndX - cnationTouchStartX;
-    let dy = touchEndY - cnationTouchStartY;
+if (cnationIsGameOver) return;
+let touchEndX = e.changedTouches[0].screenX;
+let touchEndY = e.changedTouches[0].screenY;
+let dx = touchEndX - cnationTouchStartX;
+let dy = touchEndY - cnationTouchStartY;
 
-    if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > 30 && cnationDirection.x === 0) cnationNextDirection = { x: 1, y: 0 };
-        else if (dx < -30 && cnationDirection.x === 0) cnationNextDirection = { x: -1, y: 0 };
-    } else {
-        if (dy > 30 && cnationDirection.y === 0) cnationNextDirection = { x: 0, y: 1 };
-        else if (dy < -30 && cnationDirection.y === 0) cnationNextDirection = { x: 0, y: -1 };
-    }
+if (Math.abs(dx) > Math.abs(dy)) {
+if (dx > 30 && cnationDirection.x === 0) cnationNextDirection = { x: 1, y: 0 };
+else if (dx < -30 && cnationDirection.x === 0) cnationNextDirection = { x: -1, y: 0 };
+} else {
+if (dy > 30 && cnationDirection.y === 0) cnationNextDirection = { x: 0, y: 1 };
+else if (dy < -30 && cnationDirection.y === 0) cnationNextDirection = { x: 0, y: -1 };
+}
 });
 
-7. 게임 루프 및 로직 (cnation-loop)
+// 7. 게임 루프 및 로직
 function cnationAnimate(time) {
-    requestAnimationFrame(cnationAnimate);
-    if (cnationIsGameOver) return;
+requestAnimationFrame(cnationAnimate);
+if (cnationIsGameOver) return;
 
-    if (cnationFood) {
-        cnationFood.rotation.x += 0.05;
-        cnationFood.rotation.y += 0.05;
-    }
+if (cnationFood) {
+cnationFood.rotation.x += 0.05;
+cnationFood.rotation.y += 0.05;
+}
 
-    if (time - cnationLastMoveTime > cnationMoveInterval) {
-        cnationDirection = cnationNextDirection;
-        let nextX = cnationSnake[0].position.x + cnationDirection.x * cnationGridSize;
-        let nextZ = cnationSnake[0].position.z + cnationDirection.y * cnationGridSize;
+if (time - cnationLastMoveTime > cnationMoveInterval) {
+cnationDirection = cnationNextDirection;
+let nextX = cnationSnake[0].position.x + cnationDirection.x * cnationGridSize;
+let nextZ = cnationSnake[0].position.z + cnationDirection.y * cnationGridSize;
 
-        if (nextX < -cnationBounds.x || nextX > cnationBounds.x || nextZ < -cnationBounds.y || nextZ > cnationBounds.y) {
-            cnationEndGame();
-            return;
-        }
+if (nextX < -cnationBounds.x || nextX > cnationBounds.x || nextZ < -cnationBounds.y || nextZ > cnationBounds.y) {
+cnationEndGame();
+return;
+}
 
-        for (let i = 0; i < cnationSnake.length; i++) {
-            if (cnationSnake[i].position.x === nextX && cnationSnake[i].position.z === nextZ) {
-                cnationEndGame();
-                return;
-            }
-        }
+for (let i = 0; i < cnationSnake.length; i++) {
+if (cnationSnake[i].position.x === nextX && cnationSnake[i].position.z === nextZ) {
+cnationEndGame();
+return;
+}
+}
 
-        let isEating = Math.abs(nextX - cnationFood.position.x) < 0.1 && Math.abs(nextZ - cnationFood.position.z) < 0.1;
+let isEating = Math.abs(nextX - cnationFood.position.x) < 0.1 && Math.abs(nextZ - cnationFood.position.z) < 0.1;
 
-        let tail;
-        if (isEating) {
-            tail = new THREE.Mesh(cnationBodyGeo, cnationBodyMat);
-            cnationScene.add(tail);
-            cnationSnake.push(tail);
-            cnationScore += 10;
-            document.getElementById('cnation-score-val').innerText = cnationScore;
-            cnationMoveInterval = Math.max(80, cnationMoveInterval - 5); 
-            cnationSpawnFood();
-            cnationEatSound.currentTime = 0;
-            cnationEatSound.play().catch(e => console.log('Sound play prevented'));
-        }
+let tail;
+if (isEating) {
+tail = new THREE.Mesh(cnationBodyGeo, cnationBodyMat);
+cnationScene.add(tail);
+cnationSnake.push(tail);
+cnationScore += 10;
+document.getElementById('cnation-score-val').innerText = cnationScore;
+cnationMoveInterval = Math.max(80, cnationMoveInterval - 5); 
+cnationSpawnFood();
+cnationEatSound.currentTime = 0;
+cnationEatSound.play().catch(e => console.log('Sound play prevented'));
+}
 
-        for (let i = cnationSnake.length - 1; i > 0; i--) {
-            cnationSnake[i].position.copy(cnationSnake[i - 1].position);
-        }
-        cnationSnake[0].position.set(nextX, 0.5, nextZ);
+for (let i = cnationSnake.length - 1; i > 0; i--) {
+cnationSnake[i].position.copy(cnationSnake[i - 1].position);
+}
+cnationSnake[0].position.set(nextX, 0.5, nextZ);
 
-        cnationLastMoveTime = time;
-    }
-    cnationRenderer.render(cnationScene, cnationCamera);
+cnationLastMoveTime = time;
+}
+cnationRenderer.render(cnationScene, cnationCamera);
 }
 
 function cnationEndGame() {
-    cnationIsGameOver = true;
-    cnationDieSound.play().catch(e => console.log('Sound play prevented'));
-    document.getElementById('cnation-final-score').innerText = cnationScore;
-    document.getElementById('cnation-game-over').style.display = 'block';
+cnationIsGameOver = true;
+cnationDieSound.play().catch(e => console.log('Sound play prevented'));
+document.getElementById('cnation-final-score').innerText = cnationScore;
+document.getElementById('cnation-game-over').style.display = 'block';
 }
 
 window.cnationRestartGame = function() {
-    cnationInitGame();
+cnationInitGame();
 };
 
 window.addEventListener('resize', () => {
-    cnationCamera.aspect = window.innerWidth / window.innerHeight;
-    cnationCamera.updateProjectionMatrix();
-    cnationRenderer.setSize(window.innerWidth, window.innerHeight);
+cnationCamera.aspect = window.innerWidth / window.innerHeight;
+cnationCamera.updateProjectionMatrix();
+cnationRenderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 cnationInitGame();
