@@ -55,6 +55,22 @@ width: 220px;
 background-color: #ffffff;
 color: #000000;
 }
+#cnation-worm-preview {
+display: flex;
+justify-content: center;
+align-items: center;
+margin-bottom: 15px;
+gap: 3px;
+background: #e0e0e0;
+padding: 8px 15px;
+border-radius: 20px;
+border: 1px solid #ccc;
+}
+.cnation-preview-dot {
+width: 22px;
+height: 22px;
+border-radius: 50%;
+}
 .cnation-btn {
 background-color: #333333;
 color: white;
@@ -84,18 +100,18 @@ background: rgba(0,0,0,0.6);
 padding-bottom: 5px;
 }
 .cnation-ui-text {
-font-size: 16px;
+font-size: 15px;
 font-weight: bold;
 color: #fff;
 margin: 3px 0;
 text-shadow: 1px 1px 0px #000;
 }
-#cnation-game-level {
+.cnation-highlight-box {
 display: inline-block;
-padding: 2px 10px;
+padding: 2px 8px;
 background-color: rgba(255, 255, 255, 0.9);
 border-radius: 8px;
-font-size: 18px;
+font-size: 16px;
 font-weight: 900;
 color: #000000;
 }
@@ -163,8 +179,8 @@ font-weight: bold;
 
 <p class="cnation-select-label">영어 단어 수준</p>
 <select id="cnation-level-select" class="cnation-select">
-<option value="kindergarten">유치원</option>
-<option value="elementary">초등학교</option>
+<option value="kindergarten">유치원생</option>
+<option value="elementary">초등학생</option>
 <option value="middle">중학생</option>
 <option value="high">고등학생</option>
 </select>
@@ -176,7 +192,7 @@ font-weight: bold;
 </select>
 
 <p class="cnation-select-label">지렁이 색상</p>
-<select id="cnation-color-select" class="cnation-select">
+<select id="cnation-color-select" class="cnation-select" onchange="cnationUpdatePreview()">
 <option value="green">녹색</option>
 <option value="blue">파랑</option>
 <option value="red">빨강</option>
@@ -185,12 +201,18 @@ font-weight: bold;
 <option value="purple">보라</option>
 </select>
 
+<div id="cnation-worm-preview">
+<div id="cnation-preview-head" class="cnation-preview-dot"></div>
+<div id="cnation-preview-body1" class="cnation-preview-dot"></div>
+<div id="cnation-preview-body2" class="cnation-preview-dot"></div>
+</div>
+
 <button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
-<div id="cnation-version-tag">Version 1.0.1</div>
+<div id="cnation-version-tag">Version 1.0.2</div>
 </div>
 
 <div id="cnation-game-ui">
-<p class="cnation-ui-text">난이도: <span id="cnation-game-level">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
+<p class="cnation-ui-text">단어: <span id="cnation-vocab-display" class="cnation-highlight-box">유치원생</span> | 난이도: <span id="cnation-game-level" class="cnation-highlight-box">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
 <p id="cnation-question-text">의미</p>
 <div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
 </div>
@@ -213,6 +235,24 @@ font-weight: bold;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="./word.js"></script>
 <script>
+const cnationColorConfig = {
+green: { hHex: 0x145a32, bHex: 0x58d68d, hCss: '#145a32', bCss: '#58d68d' },
+blue: { hHex: 0x154360, bHex: 0x5dade2, hCss: '#154360', bCss: '#5dade2' },
+red: { hHex: 0x641e16, bHex: 0xec7063, hCss: '#641e16', bCss: '#ec7063' },
+pink: { hHex: 0x78281f, bHex: 0xff99cc, hCss: '#78281f', bCss: '#ff99cc' },
+yellow: { hHex: 0x7d6608, bHex: 0xf7dc6f, hCss: '#7d6608', bCss: '#f7dc6f' },
+purple: { hHex: 0x4a235a, bHex: 0xbb8fce, hCss: '#4a235a', bCss: '#bb8fce' }
+};
+
+function cnationUpdatePreview() {
+let colorKey = document.getElementById('cnation-color-select').value;
+let conf = cnationColorConfig[colorKey];
+document.getElementById('cnation-preview-head').style.backgroundColor = conf.hCss;
+document.getElementById('cnation-preview-body1').style.backgroundColor = conf.bCss;
+document.getElementById('cnation-preview-body2').style.backgroundColor = conf.bCss;
+}
+cnationUpdatePreview();
+
 let cnationAudioCtx;
 
 function cnationInitAudio() {
@@ -366,10 +406,10 @@ let cnationFoodData = [];
 const cnationGeoSphere = new THREE.SphereGeometry(0.5, 32, 32);
 const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
 
-const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0x27ae60 });
-const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0x2ecc71 });
+const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0x145a32 });
+const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0x58d68d });
 
-const cnationMatEnemyHead = new THREE.MeshPhongMaterial({ color: 0x555555 });
+const cnationMatEnemyHead = new THREE.MeshPhongMaterial({ color: 0x333333 });
 const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
 
 const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700 });
@@ -378,28 +418,17 @@ window.cnationStartGame = function() {
 cnationInitAudio();
 
 let colorKey = document.getElementById('cnation-color-select').value;
-if (colorKey === 'green') {
-cnationMatPlayerHead.color.setHex(0x27ae60);
-cnationMatPlayerBody.color.setHex(0x2ecc71);
-} else if (colorKey === 'blue') {
-cnationMatPlayerHead.color.setHex(0x2980b9);
-cnationMatPlayerBody.color.setHex(0x3498db);
-} else if (colorKey === 'red') {
-cnationMatPlayerHead.color.setHex(0xc0392b);
-cnationMatPlayerBody.color.setHex(0xe74c3c);
-} else if (colorKey === 'pink') {
-cnationMatPlayerHead.color.setHex(0xd14283);
-cnationMatPlayerBody.color.setHex(0xff69b4);
-} else if (colorKey === 'yellow') {
-cnationMatPlayerHead.color.setHex(0xf39c12);
-cnationMatPlayerBody.color.setHex(0xf1c40f);
-} else if (colorKey === 'purple') {
-cnationMatPlayerHead.color.setHex(0x8e44ad);
-cnationMatPlayerBody.color.setHex(0x9b59b6);
-}
+let conf = cnationColorConfig[colorKey];
+cnationMatPlayerHead.color.setHex(conf.hHex);
+cnationMatPlayerBody.color.setHex(conf.bHex);
 
-let levelKey = document.getElementById('cnation-level-select').value;
+let levelSel = document.getElementById('cnation-level-select');
+let levelKey = levelSel.value;
+let levelText = levelSel.options[levelSel.selectedIndex].text;
+
 cnationSelectedVocab = cnationWordDB[levelKey];
+document.getElementById('cnation-vocab-display').innerText = levelText;
+
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'block';
