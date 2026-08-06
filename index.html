@@ -124,13 +124,10 @@ border-radius: 5px;
 <div id="cnation-start-screen">
 <h1>영단어 마스터<br>지렁이 게임</h1>
 <select id="cnation-level-select" class="cnation-select">
-<option value="m1">중학교 1학년</option>
-<option value="m2">중학교 2학년</option>
-<option value="m3">중학교 3학년</option>
-<option value="h1">고등학교 1학년</option>
-<option value="h2">고등학교 2학년</option>
-<option value="h3">고등학교 3학년</option>
-<option value="expert">전문가</option>
+<option value="kindergarten">유치원</option>
+<option value="elementary">초등학교</option>
+<option value="middle">중학생</option>
+<option value="high">고등학생</option>
 </select>
 <button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
 </div>
@@ -157,38 +154,8 @@ border-radius: 5px;
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="./word.js"></script>
 <script>
-const cnationWordDB = {
-m1: [
-{en:"apple", ko:"사과"}, {en:"school", ko:"학교"}, {en:"friend", ko:"친구"}, {en:"water", ko:"물"}, {en:"book", ko:"책"},
-{en:"house", ko:"집"}, {en:"family", ko:"가족"}, {en:"happy", ko:"행복한"}, {en:"love", ko:"사랑"}, {en:"time", ko:"시간"}
-],
-m2: [
-{en:"develop", ko:"개발하다"}, {en:"experience", ko:"경험"}, {en:"environment", ko:"환경"}, {en:"improve", ko:"향상시키다"}, {en:"popular", ko:"인기있는"},
-{en:"traditional", ko:"전통적인"}, {en:"various", ko:"다양한"}, {en:"suggest", ko:"제안하다"}, {en:"purpose", ko:"목적"}, {en:"decide", ko:"결정하다"}
-],
-m3: [
-{en:"analyze", ko:"분석하다"}, {en:"benefit", ko:"이익"}, {en:"challenge", ko:"도전"}, {en:"determine", ko:"결정하다"}, {en:"effect", ko:"효과"},
-{en:"factor", ko:"요인"}, {en:"generate", ko:"발생시키다"}, {en:"identify", ko:"식별하다"}, {en:"maintain", ko:"유지하다"}, {en:"occur", ko:"발생하다"}
-],
-h1: [
-{en:"acquire", ko:"습득하다"}, {en:"capacity", ko:"수용력"}, {en:"evaluate", ko:"평가하다"}, {en:"fundamental", ko:"근본적인"}, {en:"hypothesis", ko:"가설"},
-{en:"imply", ko:"암시하다"}, {en:"modify", ko:"수정하다"}, {en:"objective", ko:"객관적인"}, {en:"perspective", ko:"관점"}, {en:"relevant", ko:"관련된"}
-],
-h2: [
-{en:"abstract", ko:"추상적인"}, {en:"comprehensive", ko:"포괄적인"}, {en:"contradiction", ko:"모순"}, {en:"derive", ko:"끌어내다"}, {en:"empirical", ko:"경험적인"},
-{en:"fluctuate", ko:"변동하다"}, {en:"hierarchy", ko:"계급"}, {en:"inevitable", ko:"불가피한"}, {en:"paradigm", ko:"패러다임"}, {en:"subsequent", ko:"그 다음의"}
-],
-h3: [
-{en:"ambiguous", ko:"애매한"}, {en:"cognitive", ko:"인지적인"}, {en:"dilemma", ko:"진퇴양난"}, {en:"explicit", ko:"명백한"}, {en:"intrinsic", ko:"본질적인"},
-{en:"metaphor", ko:"은유"}, {en:"pragmatic", ko:"실용적인"}, {en:"resilient", ko:"회복력 있는"}, {en:"spontaneous", ko:"자발적인"}, {en:"vulnerable", ko:"취약한"}
-],
-expert: [
-{en:"aberration", ko:"일탈"}, {en:"capricious", ko:"변덕스러운"}, {en:"ephemeral", ko:"단명하는"}, {en:"fastidious", ko:"까다로운"}, {en:"iconoclast", ko:"우상 파괴자"},
-{en:"obfuscate", ko:"모호하게 하다"}, {en:"pedantic", ko:"현학적인"}, {en:"sycophant", ko:"아첨꾼"}, {en:"ubiquitous", ko:"어디에나 있는"}, {en:"zealous", ko:"열성적인"}
-]
-};
-
 const cnationScene = new THREE.Scene();
 cnationScene.background = new THREE.Color(0x2c3e50);
 const cnationBounds = { x: 10, y: 18 };
@@ -262,8 +229,7 @@ const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0xff69b4 });
 const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0xffb6c1 });
 const cnationMatEnemyHead = new THREE.MeshPhongMaterial({ color: 0x3498db });
 const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0x87ceeb });
-const cnationMatFoodCorrect = new THREE.MeshPhongMaterial({ color: 0xffd700, emissive: 0xaa8800 });
-const cnationMatFoodWrong = new THREE.MeshPhongMaterial({ color: 0xdddddd });
+const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700, emissive: 0xaa8800 });
 
 window.cnationStartGame = function() {
 let levelKey = document.getElementById('cnation-level-select').value;
@@ -365,7 +331,7 @@ for(let p of cnationPlayerLogic) if(p.x === rx && p.z === rz) valid = false;
 for(let f of cnationFoodData) if(f.x === rx && f.z === rz) valid = false;
 }
 let isCorrect = (choices[i].en === cnationCurrentQuestion.en);
-let m = new THREE.Mesh(cnationGeoBox, isCorrect ? cnationMatFoodCorrect : cnationMatFoodWrong);
+let m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
 m.position.set(rx, 0.5, rz);
 cnationFoodData.push({ x: rx, z: rz, mesh: m, word: choices[i].en, isCorrect: isCorrect });
 cnationScene.add(m);
