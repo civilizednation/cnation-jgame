@@ -3,67 +3,83 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>명국이의 지렁이게임 1탄</title>
+<title>cnation-KawaiiSnake</title>
 <style>
 body {
 margin: 0;
 overflow: hidden;
-background-color: #f0f8ff;
-font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+background-color: #2c3e50;
+font-family: 'Comic Sans MS', sans-serif;
 touch-action: none;
 }
-#cnation-game-ui {
+#cnation-start-screen, #cnation-game-over {
 position: absolute;
-top: 20px;
-width: 100%;
-text-align: center;
-z-index: 10;
-pointer-events: none;
-}
-#cnation-score-text {
-font-size: 28px;
-font-weight: bold;
-color: #ff69b4;
-text-shadow: 2px 2px 0px #fff, -2px -2px 0px #fff, 2px -2px 0px #fff, -2px 2px 0px #fff;
-margin: 0;
+top: 0; left: 0; width: 100%; height: 100%;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+background: rgba(255, 240, 245, 0.95);
+z-index: 30;
 }
 #cnation-game-over {
 display: none;
-position: absolute;
-top: 50%;
-left: 50%;
-transform: translate(-50%, -50%);
+background: rgba(0, 0, 0, 0.7);
+}
+h1 {
+color: #ff1493;
+font-size: 36px;
+margin-bottom: 30px;
+text-shadow: 2px 2px #fff;
 text-align: center;
-z-index: 20;
-background: rgba(255, 255, 255, 0.9);
-padding: 30px;
-border-radius: 20px;
-box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-border: 3px solid #ffb6c1;
 }
 #cnation-game-over h1 {
-color: #ff1493;
-margin-top: 0;
+color: #ff4500;
+text-shadow: 2px 2px #000;
 }
-#cnation-restart-btn {
+.cnation-btn {
 background-color: #ffb6c1;
 color: white;
 border: none;
-padding: 15px 30px;
-font-size: 20px;
+padding: 15px 40px;
+margin: 10px;
+font-size: 22px;
 font-weight: bold;
 border-radius: 30px;
 cursor: pointer;
 box-shadow: 0 5px 0 #ff69b4;
-font-family: inherit;
+width: 200px;
 }
-#cnation-restart-btn:active {
+.cnation-btn:active {
 transform: translateY(5px);
 box-shadow: none;
+}
+#cnation-game-ui {
+position: absolute;
+top: 10px;
+width: 100%;
+text-align: center;
+z-index: 10;
+display: none;
+pointer-events: none;
+}
+#cnation-score-text {
+font-size: 24px;
+font-weight: bold;
+color: #fff;
+margin: 0;
+text-shadow: 2px 2px 0px #000;
 }
 </style>
 </head>
 <body>
+
+<div id="cnation-start-screen">
+<h1>명국이의<br>지렁이 게임</h1>
+<button class="cnation-btn" onclick="cnationStartGame('easy')">시작 (하)</button>
+<button class="cnation-btn" onclick="cnationStartGame('normal')">시작 (중)</button>
+<button class="cnation-btn" onclick="cnationStartGame('hard')">시작 (상)</button>
+</div>
 
 <div id="cnation-game-ui">
 <p id="cnation-score-text">SCORE: <span id="cnation-score-val">0</span></p>
@@ -71,185 +87,285 @@ box-shadow: none;
 
 <div id="cnation-game-over">
 <h1>GAME OVER!</h1>
-<p id="cnation-score-text">Final Score: <span id="cnation-final-score">0</span></p>
-<button id="cnation-restart-btn" onclick="cnationRestartGame()">다시 하기</button>
+<p id="cnation-score-text" style="margin-bottom: 30px;">최종 점수: <span id="cnation-final-score">0</span></p>
+<button class="cnation-btn" onclick="cnationGoToTitle()">타이틀로</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-// 1. 기본 환경 설정
 const cnationScene = new THREE.Scene();
-cnationScene.background = new THREE.Color(0xfff0f5);
+cnationScene.background = new THREE.Color(0x2c3e50);
 
-const cnationCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-cnationCamera.position.set(0, 25, 20);
+const cnationBounds = { x: 12, y: 18 };
+const cnationCamera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+cnationCamera.position.set(0, 35, 0);
 cnationCamera.lookAt(0, 0, 0);
 
 const cnationRenderer = new THREE.WebGLRenderer({ antialias: true });
 cnationRenderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(cnationRenderer.domElement);
 
-// 2. 조명 설정
-const cnationAmbientLight = new THREE.AmbientLight(0xffffff, 0.6);
+const cnationAmbientLight = new THREE.AmbientLight(0xffffff, 0.7);
 cnationScene.add(cnationAmbientLight);
-const cnationDirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-cnationDirLight.position.set(10, 20, 10);
+const cnationDirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+cnationDirLight.position.set(10, 20, 5);
 cnationScene.add(cnationDirLight);
 
-// 3. 사운드 객체 설정
 const cnationEatSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
 const cnationDieSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3');
 
-// 4. 게임 변수 및 에셋
-let cnationSnake = [];
-let cnationFood;
-let cnationDirection = { x: 0, y: -1 };
-let cnationNextDirection = { x: 0, y: -1 };
-let cnationGridSize = 1;
+const cnationFloorGeo = new THREE.PlaneGeometry(cnationBounds.x * 2 + 2, cnationBounds.y * 2 + 2);
+const cnationFloorMat = new THREE.MeshPhongMaterial({ color: 0x34495e });
+const cnationFloor = new THREE.Mesh(cnationFloorGeo, cnationFloorMat);
+cnationFloor.rotation.x = -Math.PI / 2;
+cnationFloor.position.y = -0.5;
+cnationScene.add(cnationFloor);
+
+const cnationWallGeoX = new THREE.BoxGeometry(cnationBounds.x * 2 + 3, 1, 1);
+const cnationWallGeoY = new THREE.BoxGeometry(1, 1, cnationBounds.y * 2 + 3);
+const cnationWallMat = new THREE.MeshPhongMaterial({ color: 0x95a5a6 });
+
+const cnationWallTop = new THREE.Mesh(cnationWallGeoX, cnationWallMat);
+cnationWallTop.position.set(0, 0, -cnationBounds.y - 1);
+cnationScene.add(cnationWallTop);
+
+const cnationWallBot = new THREE.Mesh(cnationWallGeoX, cnationWallMat);
+cnationWallBot.position.set(0, 0, cnationBounds.y + 1);
+cnationScene.add(cnationWallBot);
+
+const cnationWallLeft = new THREE.Mesh(cnationWallGeoY, cnationWallMat);
+cnationWallLeft.position.set(-cnationBounds.x - 1, 0, 0);
+cnationScene.add(cnationWallLeft);
+
+const cnationWallRight = new THREE.Mesh(cnationWallGeoY, cnationWallMat);
+cnationWallRight.position.set(cnationBounds.x + 1, 0, 0);
+cnationScene.add(cnationWallRight);
+
+let cnationGameState = 'TITLE';
 let cnationScore = 0;
-let cnationMoveInterval = 200; 
-let cnationLastMoveTime = 0;
-let cnationIsGameOver = false;
+let cnationBaseInterval = 200;
 
-const cnationBounds = { x: 10, y: 15 };
+let cnationPlayerLogic = [];
+let cnationPlayerMeshes = [];
+let cnationPlayerDir = { x: 0, y: -1 };
+let cnationPlayerNextDir = { x: 0, y: -1 };
+let cnationPlayerLastTime = 0;
 
-const cnationBodyGeo = new THREE.SphereGeometry(0.5, 32, 32);
-const cnationHeadMat = new THREE.MeshPhongMaterial({ color: 0xff69b4, shininess: 100 });
-const cnationBodyMat = new THREE.MeshPhongMaterial({ color: 0xffb6c1, shininess: 100 });
-const cnationFoodGeo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
-const cnationFoodMat = new THREE.MeshPhongMaterial({ color: 0xffd700, shininess: 100 });
+let cnationEnemies = [];
+let cnationFoodMeshes = [];
 
-// 5. 초기화 함수
-function cnationInitGame() {
-cnationSnake.forEach(segment => cnationScene.remove(segment));
-cnationSnake = [];
-if (cnationFood) cnationScene.remove(cnationFood);
+const cnationGeoSphere = new THREE.SphereGeometry(0.5, 32, 32);
+const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+
+const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0xff69b4 });
+const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0xffb6c1 });
+const cnationMatEnemyHead = new THREE.MeshPhongMaterial({ color: 0x3498db });
+const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0x87ceeb });
+const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+
+window.cnationStartGame = function(difficulty) {
+document.getElementById('cnation-start-screen').style.display = 'none';
+document.getElementById('cnation-game-over').style.display = 'none';
+document.getElementById('cnation-game-ui').style.display = 'block';
+
+if(difficulty === 'easy') cnationBaseInterval = 250;
+if(difficulty === 'normal') cnationBaseInterval = 150;
+if(difficulty === 'hard') cnationBaseInterval = 80;
+
+cnationResetWorld();
+cnationGameState = 'PLAYING';
+};
+
+window.cnationGoToTitle = function() {
+document.getElementById('cnation-game-over').style.display = 'none';
+document.getElementById('cnation-game-ui').style.display = 'none';
+document.getElementById('cnation-start-screen').style.display = 'flex';
+cnationGameState = 'TITLE';
+};
+
+function cnationResetWorld() {
+cnationPlayerMeshes.forEach(m => cnationScene.remove(m));
+cnationEnemies.forEach(e => e.meshes.forEach(m => cnationScene.remove(m)));
+cnationFoodMeshes.forEach(m => cnationScene.remove(m));
+
+cnationPlayerLogic = [];
+cnationPlayerMeshes = [];
+cnationEnemies = [];
+cnationFoodMeshes = [];
 
 cnationScore = 0;
-cnationMoveInterval = 200;
-cnationDirection = { x: 0, y: -1 };
-cnationNextDirection = { x: 0, y: -1 };
-cnationIsGameOver = false;
 document.getElementById('cnation-score-val').innerText = cnationScore;
-document.getElementById('cnation-game-over').style.display = 'none';
+cnationPlayerDir = { x: 0, y: -1 };
+cnationPlayerNextDir = { x: 0, y: -1 };
+cnationPlayerLastTime = performance.now();
 
 for (let i = 0; i < 3; i++) {
-const segment = new THREE.Mesh(cnationBodyGeo, i === 0 ? cnationHeadMat : cnationBodyMat);
-segment.position.set(0, 0.5, i * cnationGridSize);
-cnationSnake.push(segment);
-cnationScene.add(segment);
+cnationPlayerLogic.push({ x: 0, z: i });
+let m = new THREE.Mesh(cnationGeoSphere, i === 0 ? cnationMatPlayerHead : cnationMatPlayerBody);
+m.position.set(0, 0.5, i);
+cnationPlayerMeshes.push(m);
+cnationScene.add(m);
 }
+
+cnationSpawnEnemy(-5, 5);
+cnationSpawnEnemy(5, -5);
 cnationSpawnFood();
+cnationSpawnFood();
+}
+
+function cnationSpawnEnemy(startX, startZ) {
+let logic = [];
+let meshes = [];
+for (let i = 0; i < 3; i++) {
+logic.push({ x: startX, z: startZ + i });
+let m = new THREE.Mesh(cnationGeoSphere, i === 0 ? cnationMatEnemyHead : cnationMatEnemyBody);
+m.position.set(startX, 0.5, startZ + i);
+meshes.push(m);
+cnationScene.add(m);
+}
+cnationEnemies.push({
+logic: logic,
+meshes: meshes,
+dir: { x: 0, y: -1 },
+lastTime: performance.now(),
+interval: 300
+});
 }
 
 function cnationSpawnFood() {
-let validPosition = false;
-let rx, rz;
-while (!validPosition) {
-rx = Math.floor(Math.random() * (cnationBounds.x * 2)) - cnationBounds.x;
-rz = Math.floor(Math.random() * (cnationBounds.y * 2)) - cnationBounds.y;
-validPosition = true;
-for (let i = 0; i < cnationSnake.length; i++) {
-if (cnationSnake[i].position.x === rx && cnationSnake[i].position.z === rz) {
-validPosition = false;
-break;
-}
-}
-}
-if (!cnationFood) {
-cnationFood = new THREE.Mesh(cnationFoodGeo, cnationFoodMat);
-cnationScene.add(cnationFood);
-}
-cnationFood.position.set(rx, 0.5, rz);
+let rx = Math.floor(Math.random() * (cnationBounds.x * 2)) - cnationBounds.x;
+let rz = Math.floor(Math.random() * (cnationBounds.y * 2)) - cnationBounds.y;
+let m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
+m.position.set(rx, 0.5, rz);
+cnationFoodMeshes.push(m);
+cnationScene.add(m);
 }
 
-// 6. 모바일 터치 스와이프 컨트롤
-let cnationTouchStartX = 0;
-let cnationTouchStartY = 0;
-
+let cnationTouchX = 0;
+let cnationTouchY = 0;
 window.addEventListener('touchstart', (e) => {
-cnationTouchStartX = e.changedTouches[0].screenX;
-cnationTouchStartY = e.changedTouches[0].screenY;
+cnationTouchX = e.touches[0].screenX;
+cnationTouchY = e.touches[0].screenY;
 });
-
 window.addEventListener('touchend', (e) => {
-if (cnationIsGameOver) return;
-let touchEndX = e.changedTouches[0].screenX;
-let touchEndY = e.changedTouches[0].screenY;
-let dx = touchEndX - cnationTouchStartX;
-let dy = touchEndY - cnationTouchStartY;
-
+if (cnationGameState !== 'PLAYING') return;
+let dx = e.changedTouches[0].screenX - cnationTouchX;
+let dy = e.changedTouches[0].screenY - cnationTouchY;
 if (Math.abs(dx) > Math.abs(dy)) {
-if (dx > 30 && cnationDirection.x === 0) cnationNextDirection = { x: 1, y: 0 };
-else if (dx < -30 && cnationDirection.x === 0) cnationNextDirection = { x: -1, y: 0 };
+if (dx > 30 && cnationPlayerDir.x === 0) cnationPlayerNextDir = { x: 1, y: 0 };
+else if (dx < -30 && cnationPlayerDir.x === 0) cnationPlayerNextDir = { x: -1, y: 0 };
 } else {
-if (dy > 30 && cnationDirection.y === 0) cnationNextDirection = { x: 0, y: 1 };
-else if (dy < -30 && cnationDirection.y === 0) cnationNextDirection = { x: 0, y: -1 };
+if (dy > 30 && cnationPlayerDir.y === 0) cnationPlayerNextDir = { x: 0, y: 1 };
+else if (dy < -30 && cnationPlayerDir.y === 0) cnationPlayerNextDir = { x: 0, y: -1 };
 }
 });
 
-// 7. 게임 루프 및 로직
+function cnationGameOver() {
+cnationGameState = 'GAMEOVER';
+cnationDieSound.play().catch(()=>{});
+document.getElementById('cnation-final-score').innerText = cnationScore;
+document.getElementById('cnation-game-over').style.display = 'flex';
+}
+
+function cnationUpdateAI(time) {
+cnationEnemies.forEach(enemy => {
+if (time - enemy.lastTime > enemy.interval) {
+let head = enemy.logic[0];
+if(Math.random() < 0.2) {
+if(enemy.dir.x === 0) enemy.dir = Math.random() < 0.5 ? {x:1, y:0} : {x:-1, y:0};
+else enemy.dir = Math.random() < 0.5 ? {x:0, y:1} : {x:0, y:-1};
+}
+let nx = head.x + enemy.dir.x;
+let nz = head.z + enemy.dir.y;
+if (nx < -cnationBounds.x || nx > cnationBounds.x || nz < -cnationBounds.y || nz > cnationBounds.y) {
+enemy.dir.x *= -1;
+enemy.dir.y *= -1;
+nx = head.x + enemy.dir.x;
+nz = head.z + enemy.dir.y;
+}
+for (let i = enemy.logic.length - 1; i > 0; i--) {
+enemy.logic[i].x = enemy.logic[i - 1].x;
+enemy.logic[i].z = enemy.logic[i - 1].z;
+}
+enemy.logic[0].x = nx;
+enemy.logic[0].z = nz;
+enemy.lastTime = time;
+}
+for(let i=0; i<enemy.meshes.length; i++) {
+let t = new THREE.Vector3(enemy.logic[i].x, 0.5, enemy.logic[i].z);
+enemy.meshes[i].position.lerp(t, 0.4);
+}
+});
+}
+
 function cnationAnimate(time) {
 requestAnimationFrame(cnationAnimate);
-if (cnationIsGameOver) return;
 
-if (cnationFood) {
-cnationFood.rotation.x += 0.05;
-cnationFood.rotation.y += 0.05;
+if (cnationGameState === 'PLAYING') {
+cnationFoodMeshes.forEach(f => {
+f.rotation.x += 0.05;
+f.rotation.y += 0.05;
+});
+
+if (time - cnationPlayerLastTime > cnationBaseInterval) {
+cnationPlayerDir = cnationPlayerNextDir;
+let nx = cnationPlayerLogic[0].x + cnationPlayerDir.x;
+let nz = cnationPlayerLogic[0].z + cnationPlayerDir.y;
+
+if (nx < -cnationBounds.x || nx > cnationBounds.x || nz < -cnationBounds.y || nz > cnationBounds.y) {
+cnationGameOver(); return;
 }
-
-if (time - cnationLastMoveTime > cnationMoveInterval) {
-cnationDirection = cnationNextDirection;
-let nextX = cnationSnake[0].position.x + cnationDirection.x * cnationGridSize;
-let nextZ = cnationSnake[0].position.z + cnationDirection.y * cnationGridSize;
-
-if (nextX < -cnationBounds.x || nextX > cnationBounds.x || nextZ < -cnationBounds.y || nextZ > cnationBounds.y) {
-cnationEndGame();
-return;
-}
-
-for (let i = 0; i < cnationSnake.length; i++) {
-if (cnationSnake[i].position.x === nextX && cnationSnake[i].position.z === nextZ) {
-cnationEndGame();
-return;
+for (let i = 1; i < cnationPlayerLogic.length; i++) {
+if (cnationPlayerLogic[i].x === nx && cnationPlayerLogic[i].z === nz) {
+cnationGameOver(); return;
 }
 }
+for (let e of cnationEnemies) {
+if (e.logic[0].x === nx && e.logic[0].z === nz) {
+cnationGameOver(); return;
+}
+}
 
-let isEating = Math.abs(nextX - cnationFood.position.x) < 0.1 && Math.abs(nextZ - cnationFood.position.z) < 0.1;
+let ateFoodIndex = -1;
+for (let i = 0; i < cnationFoodMeshes.length; i++) {
+if (Math.abs(nx - cnationFoodMeshes[i].position.x) < 0.5 && Math.abs(nz - cnationFoodMeshes[i].position.z) < 0.5) {
+ateFoodIndex = i; break;
+}
+}
 
-let tail;
-if (isEating) {
-tail = new THREE.Mesh(cnationBodyGeo, cnationBodyMat);
-cnationScene.add(tail);
-cnationSnake.push(tail);
+if (ateFoodIndex !== -1) {
+let m = new THREE.Mesh(cnationGeoSphere, cnationMatPlayerBody);
+cnationPlayerMeshes.push(m);
+cnationScene.add(m);
+cnationPlayerLogic.push({x: cnationPlayerLogic[cnationPlayerLogic.length-1].x, z: cnationPlayerLogic[cnationPlayerLogic.length-1].z});
 cnationScore += 10;
 document.getElementById('cnation-score-val').innerText = cnationScore;
-cnationMoveInterval = Math.max(80, cnationMoveInterval - 5); 
-cnationSpawnFood();
 cnationEatSound.currentTime = 0;
-cnationEatSound.play().catch(e => console.log('Sound play prevented'));
+cnationEatSound.play().catch(()=>{});
+cnationScene.remove(cnationFoodMeshes[ateFoodIndex]);
+cnationFoodMeshes.splice(ateFoodIndex, 1);
+cnationSpawnFood();
 }
 
-for (let i = cnationSnake.length - 1; i > 0; i--) {
-cnationSnake[i].position.copy(cnationSnake[i - 1].position);
+for (let i = cnationPlayerLogic.length - 1; i > 0; i--) {
+cnationPlayerLogic[i].x = cnationPlayerLogic[i - 1].x;
+cnationPlayerLogic[i].z = cnationPlayerLogic[i - 1].z;
 }
-cnationSnake[0].position.set(nextX, 0.5, nextZ);
+cnationPlayerLogic[0].x = nx;
+cnationPlayerLogic[0].z = nz;
+cnationPlayerLastTime = time;
+}
 
-cnationLastMoveTime = time;
+for (let i = 0; i < cnationPlayerMeshes.length; i++) {
+let target = new THREE.Vector3(cnationPlayerLogic[i].x, 0.5, cnationPlayerLogic[i].z);
+cnationPlayerMeshes[i].position.lerp(target, 0.4);
 }
+
+cnationUpdateAI(time);
+}
+
 cnationRenderer.render(cnationScene, cnationCamera);
 }
-
-function cnationEndGame() {
-cnationIsGameOver = true;
-cnationDieSound.play().catch(e => console.log('Sound play prevented'));
-document.getElementById('cnation-final-score').innerText = cnationScore;
-document.getElementById('cnation-game-over').style.display = 'block';
-}
-
-window.cnationRestartGame = function() {
-cnationInitGame();
-};
 
 window.addEventListener('resize', () => {
 cnationCamera.aspect = window.innerWidth / window.innerHeight;
@@ -257,7 +373,6 @@ cnationCamera.updateProjectionMatrix();
 cnationRenderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-cnationInitGame();
 requestAnimationFrame(cnationAnimate);
 </script>
 </body>
