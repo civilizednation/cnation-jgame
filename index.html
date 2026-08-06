@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>cnation-KawaiiSnake</title>
+<style>
+body {
+margin: 0;
+overflow: hidden;
+background-color: #f0f8ff;
+font-family: 'Comic Sans MS', 'Arial Rounded MT Bold', sans-serif;
+touch-action: none;
+}
+#cnation-game-ui {
+position: absolute;
+top: 20px;
+width: 100%;
+text-align: center;
+z-index: 10;
+pointer-events: none;
+}
+#cnation-score-text {
+font-size: 28px;
+font-weight: bold;
+color: #ff69b4;
+text-shadow: 2px 2px 0px #fff, -2px -2px 0px #fff, 2px -2px 0px #fff, -2px 2px 0px #fff;
+margin: 0;
+}
+#cnation-game-over {
+display: none;
+position: absolute;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+text-align: center;
+z-index: 20;
+background: rgba(255, 255, 255, 0.9);
+padding: 30px;
+border-radius: 20px;
+box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+border: 3px solid #ffb6c1;
+}
+#cnation-game-over h1 {
+color: #ff1493;
+margin-top: 0;
+}
+#cnation-restart-btn {
+background-color: #ffb6c1;
+color: white;
+border: none;
+padding: 15px 30px;
+font-size: 20px;
+font-weight: bold;
+border-radius: 30px;
+cursor: pointer;
+box-shadow: 0 5px 0 #ff69b4;
+font-family: inherit;
+}
+#cnation-restart-btn:active {
+transform: translateY(5px);
+box-shadow: none;
+}
+</style>
+</head>
+<body>
+
+<div id="cnation-game-ui">
+<p id="cnation-score-text">SCORE: <span id="cnation-score-val">0</span></p>
+</div>
+
+<div id="cnation-game-over">
+<h1>GAME OVER!</h1>
+<p id="cnation-score-text">Final Score: <span id="cnation-final-score">0</span></p>
+<button id="cnation-restart-btn" onclick="cnationRestartGame()">다시 하기</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+1. 기본 환경 설정 (cnation-setup)
+const cnationScene = new THREE.Scene();
+cnationScene.background = new THREE.Color(0xfff0f5);
+
+const cnationCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+cnationCamera.position.set(0, 25, 20);
+cnationCamera.lookAt(0, 0, 0);
+
+const cnationRenderer = new THREE.WebGLRenderer({ antialias: true });
+cnationRenderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(cnationRenderer.domElement);
+
+2. 조명 설정 (cnation-lights)
+const cnationAmbientLight = new THREE.AmbientLight(0xffffff, 0.6);
+cnationScene.add(cnationAmbientLight);
+const cnationDirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+cnationDirLight.position.set(10, 20, 10);
+cnationScene.add(cnationDirLight);
+
+3. 사운드 객체 설정 (cnation-audio)
+const cnationEatSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+const cnationDieSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3');
+
+4. 게임 변수 및 에셋 (cnation-variables)
+let cnationSnake = [];
+let cnationFood;
+let cnationDirection = { x: 0, y: -1 };
+let cnationNextDirection = { x: 0, y: -1 };
+let cnationGridSize = 1;
+let cnationScore = 0;
+let cnationMoveInterval = 200; 
+let cnationLastMoveTime = 0;
+let cnationIsGameOver = false;
+
+const cnationBounds = { x: 10, y: 15 };
+
+const cnationBodyGeo = new THREE.SphereGeometry(0.5, 32, 32);
+const cnationHeadMat = new THREE.MeshPhongMaterial({ color: 0xff69b4, shininess: 100 });
+const cnationBodyMat = new THREE.MeshPhongMaterial({ color: 0xffb6c1, shininess: 100 });
+const cnationFoodGeo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+const cnationFoodMat = new THREE.MeshPhongMaterial({ color: 0xffd700, shininess: 100 });
+
+5. 초기화 함수 (cnation-init)
+function cnationInitGame() {
+    cnationSnake.forEach(segment => cnationScene.remove(segment));
+    cnationSnake = [];
+    if (cnationFood) cnationScene.remove(cnationFood);
+    
+    cnationScore = 0;
+    cnationMoveInterval = 200;
+    cnationDirection = { x: 0, y: -1 };
+    cnationNextDirection = { x: 0, y: -1 };
+    cnationIsGameOver = false;
+    document.getElementById('cnation-score-val').innerText = cnationScore;
+    document.getElementById('cnation-game-over').style.display = 'none';
+
+    for (let i = 0; i < 3; i++) {
+        const segment = new THREE.Mesh(cnationBodyGeo, i === 0 ? cnationHeadMat : cnationBodyMat);
+        segment.position.set(0, 0.5, i * cnationGridSize);
+        cnationSnake.push(segment);
+        cnationScene.add(segment);
+    }
+    cnationSpawnFood();
+}
+
+function cnationSpawnFood() {
+    let validPosition = false;
+    let rx, rz;
+    while (!validPosition) {
+        rx = Math.floor(Math.random() * (cnationBounds.x * 2)) - cnationBounds.x;
+        rz = Math.floor(Math.random() * (cnationBounds.y * 2)) - cnationBounds.y;
+        validPosition = true;
+        for (let i = 0; i < cnationSnake.length; i++) {
+            if (cnationSnake[i].position.x === rx && cnationSnake[i].position.z === rz) {
+                validPosition = false;
+                break;
+            }
+        }
+    }
+    if (!cnationFood) {
+        cnationFood = new THREE.Mesh(cnationFoodGeo, cnationFoodMat);
+        cnationScene.add(cnationFood);
+    }
+    cnationFood.position.set(rx, 0.5, rz);
+}
+
+6. 모바일 터치 스와이프 컨트롤 (cnation-controls)
+let cnationTouchStartX = 0;
+let cnationTouchStartY = 0;
+
+window.addEventListener('touchstart', (e) => {
+    cnationTouchStartX = e.changedTouches[0].screenX;
+    cnationTouchStartY = e.changedTouches[0].screenY;
+});
+
+window.addEventListener('touchend', (e) => {
+    if (cnationIsGameOver) return;
+    let touchEndX = e.changedTouches[0].screenX;
+    let touchEndY = e.changedTouches[0].screenY;
+    let dx = touchEndX - cnationTouchStartX;
+    let dy = touchEndY - cnationTouchStartY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 30 && cnationDirection.x === 0) cnationNextDirection = { x: 1, y: 0 };
+        else if (dx < -30 && cnationDirection.x === 0) cnationNextDirection = { x: -1, y: 0 };
+    } else {
+        if (dy > 30 && cnationDirection.y === 0) cnationNextDirection = { x: 0, y: 1 };
+        else if (dy < -30 && cnationDirection.y === 0) cnationNextDirection = { x: 0, y: -1 };
+    }
+});
+
+7. 게임 루프 및 로직 (cnation-loop)
+function cnationAnimate(time) {
+    requestAnimationFrame(cnationAnimate);
+    if (cnationIsGameOver) return;
+
+    if (cnationFood) {
+        cnationFood.rotation.x += 0.05;
+        cnationFood.rotation.y += 0.05;
+    }
+
+    if (time - cnationLastMoveTime > cnationMoveInterval) {
+        cnationDirection = cnationNextDirection;
+        let nextX = cnationSnake[0].position.x + cnationDirection.x * cnationGridSize;
+        let nextZ = cnationSnake[0].position.z + cnationDirection.y * cnationGridSize;
+
+        if (nextX < -cnationBounds.x || nextX > cnationBounds.x || nextZ < -cnationBounds.y || nextZ > cnationBounds.y) {
+            cnationEndGame();
+            return;
+        }
+
+        for (let i = 0; i < cnationSnake.length; i++) {
+            if (cnationSnake[i].position.x === nextX && cnationSnake[i].position.z === nextZ) {
+                cnationEndGame();
+                return;
+            }
+        }
+
+        let isEating = Math.abs(nextX - cnationFood.position.x) < 0.1 && Math.abs(nextZ - cnationFood.position.z) < 0.1;
+
+        let tail;
+        if (isEating) {
+            tail = new THREE.Mesh(cnationBodyGeo, cnationBodyMat);
+            cnationScene.add(tail);
+            cnationSnake.push(tail);
+            cnationScore += 10;
+            document.getElementById('cnation-score-val').innerText = cnationScore;
+            cnationMoveInterval = Math.max(80, cnationMoveInterval - 5); 
+            cnationSpawnFood();
+            cnationEatSound.currentTime = 0;
+            cnationEatSound.play().catch(e => console.log('Sound play prevented'));
+        }
+
+        for (let i = cnationSnake.length - 1; i > 0; i--) {
+            cnationSnake[i].position.copy(cnationSnake[i - 1].position);
+        }
+        cnationSnake[0].position.set(nextX, 0.5, nextZ);
+
+        cnationLastMoveTime = time;
+    }
+    cnationRenderer.render(cnationScene, cnationCamera);
+}
+
+function cnationEndGame() {
+    cnationIsGameOver = true;
+    cnationDieSound.play().catch(e => console.log('Sound play prevented'));
+    document.getElementById('cnation-final-score').innerText = cnationScore;
+    document.getElementById('cnation-game-over').style.display = 'block';
+}
+
+window.cnationRestartGame = function() {
+    cnationInitGame();
+};
+
+window.addEventListener('resize', () => {
+    cnationCamera.aspect = window.innerWidth / window.innerHeight;
+    cnationCamera.updateProjectionMatrix();
+    cnationRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+cnationInitGame();
+requestAnimationFrame(cnationAnimate);
+</script>
+</body>
+</html>
