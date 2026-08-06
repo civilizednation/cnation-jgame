@@ -81,6 +81,15 @@ color: #fff;
 margin: 3px 0;
 text-shadow: 1px 1px 0px #000;
 }
+#cnation-game-level {
+display: inline-block;
+padding: 2px 10px;
+background-color: rgba(255, 255, 255, 0.9);
+border-radius: 8px;
+font-size: 18px;
+font-weight: 900;
+color: #000000;
+}
 #cnation-question-text {
 font-size: 28px;
 font-weight: bold;
@@ -129,14 +138,6 @@ text-align: center;
 margin: 15px 0;
 border: 1px solid #ffb6c1;
 }
-#cnation-game-level {
-display: inline-block;
-padding: 2px 8px;
-background-color: rgba(255, 255, 255, 0.9);
-border-radius: 6px;
-font-size: 18px;
-font-weight: 900;
-}
 </style>
 </head>
 <body>
@@ -154,7 +155,7 @@ font-weight: 900;
 </div>
 
 <div id="cnation-game-ui">
-<p class="cnation-ui-text">난이도: <span id="cnation-game-level" style="color:#000000;">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
+<p class="cnation-ui-text">난이도: <span id="cnation-game-level">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
 <p id="cnation-question-text">의미</p>
 <div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
 </div>
@@ -659,7 +660,7 @@ cnationEnemyTick();
 cnationLastEnemyTickTime = time;
 }
 
-let lerpFactor = 0.35;
+let lerpFactor = 0.12;
 for (let i = 0; i < cnationPlayerMeshes.length; i++) {
 let target = new THREE.Vector3(cnationPlayerLogic[i].x, 0.5, cnationPlayerLogic[i].z);
 cnationPlayerMeshes[i].position.lerp(target, lerpFactor);
