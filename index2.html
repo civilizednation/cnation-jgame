@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>cnation-KawaiiSnake</title>
+<style>
+body { margin: 0; overflow: hidden; background-color: #34495e; font-family: 'Comic Sans MS', 'Malgun Gothic', sans-serif; touch-action: none; }
+#cnation-start-screen, #cnation-game-over, #cnation-ranking-screen, #cnation-prompt-screen, #cnation-info-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(240, 240, 240, 0.95); z-index: 30; box-sizing: border-box; }
+#cnation-game-over { display: none; background: rgba(0, 0, 0, 0.9); }
+#cnation-ranking-screen, #cnation-info-screen { display: none; justify-content: flex-start; padding-top: 30px; overflow-y: auto; z-index: 40; padding-bottom: 100px; }
+#cnation-prompt-screen { display: none; background: rgba(0, 0, 0, 0.8); z-index: 50; }
+h1 { color: #000000; font-size: 32px; margin-bottom: 10px; text-shadow: 2px 2px #cccccc; text-align: center; }
+#cnation-game-over h1 { color: #ffffff; text-shadow: 2px 2px #555555; margin-bottom: 10px; }
+.cnation-select-label { color: #333333; font-weight: bold; font-size: 16px; margin-bottom: 5px; margin-top: 10px; }
+.cnation-select { font-size: 18px; padding: 8px; margin-bottom: 10px; border-radius: 8px; border: 2px solid #777777; width: 220px; background-color: #ffffff; color: #000000; }
+.cnation-checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px 0; font-weight: bold; color: #333333; font-size: 16px; cursor: pointer; }
+.cnation-checkbox-wrapper input { width: 20px; height: 20px; cursor: pointer; }
+#cnation-worm-preview { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; gap: 0px; background: #e0e0e0; padding: 10px 20px; border-radius: 25px; border: 1px solid #ccc; }
+.cnation-preview-dot { width: 24px; height: 24px; border-radius: 50%; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.4), inset 2px 2px 6px rgba(255,255,255,0.6); position: relative; }
+.cnation-preview-body { border-right: 4px solid rgba(0,0,0,0.25); margin-left: -4px; }
+.cnation-btn { background-color: #333333; color: white; border: none; padding: 12px 30px; margin: 10px; font-size: 20px; font-weight: bold; border-radius: 30px; cursor: pointer; box-shadow: 0 5px 0 #111111; width: 220px; box-sizing: border-box; }
+.cnation-btn:active { transform: translateY(5px); box-shadow: none; }
+.cnation-btn-rank { background-color: #f39c12; box-shadow: 0 5px 0 #d68910; }
+.cnation-btn-info { background-color: #3498db; box-shadow: 0 5px 0 #2980b9; }
+#cnation-game-ui { position: absolute; top: 0; width: 100%; text-align: center; z-index: 10; display: none; pointer-events: none; background: rgba(0,0,0,0.6); padding-bottom: 5px; }
+.cnation-ui-text { font-size: 15px; font-weight: bold; color: #fff; margin: 3px 0; text-shadow: 1px 1px 0px #000; }
+.cnation-highlight-box { display: inline-block; padding: 2px 8px; background-color: rgba(255, 255, 255, 0.9); border-radius: 8px; font-size: 16px; font-weight: 900; color: #000000; }
+.cnation-kids-badge { display: inline-block; padding: 2px 8px; background-color: #27ae60; border-radius: 8px; font-size: 16px; font-weight: 900; color: #ffffff; }
+#cnation-question-text { font-size: 28px; font-weight: bold; color: #ffd700; margin: 5px 0; text-shadow: 2px 2px 0px #000; }
+#cnation-timer-bar { width: 90%; height: 12px; background: #eee; border-radius: 6px; margin: 0 auto; overflow: hidden; }
+#cnation-timer-fill { width: 100%; height: 100%; background: #00ff00; transition: width 0.1s linear, background 0.3s; }
+#cnation-feedback-container { position: absolute; bottom: 40px; width: 100%; text-align: center; z-index: 25; pointer-events: none; }
+#cnation-feedback-text { display: none; padding: 8px 16px; background: rgba(255, 255, 255, 0.95); border-radius: 20px; font-weight: bold; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #ddd; }
+#cnation-event-msg-container { position: absolute; bottom: 100px; width: 100%; text-align: center; z-index: 25; pointer-events: none; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.cnation-word-label { position: absolute; color: #fff; font-weight: bold; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; pointer-events: none; transform: translate(-50%, -50%); z-index: 5; display: none; background: rgba(0,0,0,0.4); padding: 4px 8px; border-radius: 5px; }
+#cnation-missed-list { max-height: 180px; width: 80%; overflow-y: auto; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 10px; color: #fff; font-size: 16px; text-align: center; margin: 15px 0; border: 1px solid #777777; }
+#cnation-version-tag { position: absolute; bottom: 10px; right: 10px; color: #888888; font-size: 12px; font-weight: bold; }
+.ranking-table { width: 100%; text-align: center; border-collapse: collapse; margin-top: 10px; font-size: 16px; }
+.ranking-table th { border-bottom: 2px solid #ccc; padding: 8px; color: #333; }
+.ranking-table td { border-bottom: 1px solid #eee; padding: 8px; color: #555; font-weight: bold; }
+.cnation-info-content { width: 90%; max-width: 500px; background: #ffffff; border-radius: 16px; padding: 25px; box-shadow: 0 10px 20px rgba(0,0,0,0.15); text-align: left; font-size: 15px; color: #333; line-height: 1.7; margin-bottom: 20px; }
+.cnation-info-title { font-size: 24px; font-weight: 900; color: #2c3e50; text-align: center; margin-bottom: 20px; text-shadow: 1px 1px 2px #ccc; }
+.cnation-info-section { background: #f8f9fa; border-left: 5px solid #3498db; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
+.cnation-info-item { display: flex; align-items: center; background: #fff; padding: 10px 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.cnation-item-icon { font-size: 24px; margin-right: 15px; }
+.cnation-item-desc { flex: 1; font-size: 14px; }
+.cnation-info-footer { margin-top: 20px; padding-top: 15px; border-top: 1px solid #ccc; font-size: 13px; color: #666; text-align: center; }
+
+/* 🚨 스마트폰/태블릿 가로 모드 방지 오버레이 스타일 🚨 */
+#cnation-rotate-warning { 
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; width: 100%; height: 100%; 
+    background-color: #2c3e50; 
+    color: #ffffff; 
+    z-index: 99999; 
+    flex-direction: column; justify-content: center; align-items: center; 
+    text-align: center; font-size: 22px; font-weight: bold; line-height: 1.6; 
+}
+/* 터치가 가능한 기기(pointer: coarse)에서 가로 모드(landscape)일 때만 활성화 */
+@media (pointer: coarse) and (orientation: landscape) {
+    #cnation-rotate-warning { display: flex; }
+}
+</style>
+</head>
+<body>
+
+<!-- 가로 모드 방지 안내창 (평소엔 숨겨져 있음) -->
+<div id="cnation-rotate-warning">
+    <div style="font-size: 70px; margin-bottom: 20px;">📱🔄</div>
+    <span style="color:#f1c40f; font-size: 26px; margin-bottom:10px;">세로 모드 전용 게임입니다</span>
+    원활한 플레이를 위해<br>기기를 세로로 회전해 주세요!
+</div>
+
+<div id="cnation-start-screen">
+<h1>cnation 영어단어<br>지렁이 게임</h1>
+<p class="cnation-select-label">영어 단어 수준</p>
+<select id="cnation-level-select" class="cnation-select">
+<option value="kindergarten">유치원생</option>
+<option value="elementary">초등학생</option>
+<option value="middle">중학생</option>
+<option value="high">고등학생</option>
+</select>
+<p class="cnation-select-label">사운드 설정</p>
+<select id="cnation-sound-select" class="cnation-select">
+<option value="on">사운드 ON</option>
+<option value="off">사운드 OFF</option>
+</select>
+<label class="cnation-checkbox-wrapper">
+<input type="checkbox" id="cnation-kids-mode-checkbox"> 어린이 모드 (속도 1/3, 랭킹제외)
+</label>
+<p class="cnation-select-label">지렁이 색상</p>
+<select id="cnation-color-select" class="cnation-select" onchange="cnationUpdatePreview()">
+<option value="green">녹색</option>
+<option value="blue">파랑</option>
+<option value="red">빨강</option>
+<option value="pink">분홍</option>
+<option value="yellow">노랑</option>
+<option value="purple">보라</option>
+</select>
+<div id="cnation-worm-preview">
+<div id="cnation-preview-head" class="cnation-preview-dot" style="z-index:4;">
+<div style="position: absolute; top: 4px; left: 3px; width: 7px; height: 7px; background: white; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+<div style="width: 3px; height: 3px; background: black; border-radius: 50%; position: absolute; bottom: 1px; right: 1px;"></div>
+</div>
+<div style="position: absolute; top: 4px; right: 3px; width: 7px; height: 7px; background: white; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+<div style="width: 3px; height: 3px; background: black; border-radius: 50%; position: absolute; bottom: 1px; right: 1px;"></div>
+</div>
+</div>
+<div id="cnation-preview-body1" class="cnation-preview-dot cnation-preview-body" style="z-index:3;"></div>
+<div id="cnation-preview-body2" class="cnation-preview-dot cnation-preview-body" style="z-index:2;"></div>
+<div id="cnation-preview-body3" class="cnation-preview-dot" style="z-index:1; width: 16px; height: 16px; margin-left: -6px; border-radius: 40% 60% 60% 40%;"></div>
+</div>
+<button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
+<div style="display: flex; gap: 10px; width: 220px; justify-content: space-between; margin-bottom: 20px;">
+<button class="cnation-btn cnation-btn-rank" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowRanking()">랭킹 확인</button>
+<button class="cnation-btn cnation-btn-info" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowInfo()">게임 설명</button>
+</div>
+<div id="cnation-version-tag">Version 1.2.8</div>
+</div>
+
+<div id="cnation-ranking-screen">
+<h1>🏆 랭킹 Top 10 🏆</h1>
+<div id="cnation-ranking-content" style="width: 90%; max-width: 400px; margin-bottom: 20px;"></div>
+<button class="cnation-btn" onclick="cnationCloseRanking()">돌아가기</button>
+<button onclick="cnationResetRanking()" style="margin-top: 30px; margin-bottom: 30px; font-size: 11px; color: #aaaaaa; background: transparent; border: none; cursor: pointer; text-decoration: underline;">랭킹 리셋 (관리자용)</button>
+</div>
+
+<div id="cnation-info-screen">
+<div class="cnation-info-content">
+<div class="cnation-info-title">cnation 영어단어<br>지렁이게임 설명서</div>
+<div class="cnation-info-section">
+(1) 조작: 스마트폰은 스와이프, PC는 화살표 키로 지렁이 방향 조정<br>
+(2) 게임 종료: 벽이나 방해꾼 부딪힘, 체력(❤️) 모두 소진 시<br>
+(3) 난이도: '하'로 시작, 10문제마다 중/상으로 상승 (속도 및 방해꾼 증가)
+</div>
+<div style="font-weight: 900; font-size: 17px; margin-bottom: 10px; color: #2c3e50; text-align: center;">[ 게임 규칙 및 아이템 ]</div>
+<div class="cnation-info-item" style="border: 2px solid #2ecc71;">
+<div class="cnation-item-icon">🟩</div>
+<div class="cnation-item-desc"><b>기본 먹이:</b> 맞히면 +10점, <b>틀리면 -5점 감점</b></div>
+</div>
+<div class="cnation-info-item" style="border: 2px solid #e74c3c;">
+<div class="cnation-item-icon">💖</div>
+<div class="cnation-item-desc"><b>하트 먹이:</b> 획득 시 체력 +1 회복 (최대 5)</div>
+</div>
+<div class="cnation-info-item" style="border: 2px solid #f1c40f;">
+<div class="cnation-item-icon">⭐</div>
+<div class="cnation-item-desc"><b>별표 먹이:</b> 5문제 동안 정답 점수 두배 (20점 적용)</div>
+</div>
+<div class="cnation-info-item" style="border: 2px solid #3498db;">
+<div class="cnation-item-icon">💎</div>
+<div class="cnation-item-desc"><b>얼음 보석 먹이:</b> 방해꾼이 멈추며 통과 가능한 투명 상태가 됨</div>
+</div>
+<div class="cnation-info-footer">
+제작자 : 문명국<br>
+제작일 : 2026년 8월<br>
+문의/건의 : mmk75@naver.com
+</div>
+</div>
+<button class="cnation-btn" onclick="cnationCloseInfo()" style="margin-bottom: 40px;">돌아가기</button>
+</div>
+
+<div id="cnation-prompt-screen">
+<div style="background:#fff; padding:20px; border-radius:15px; text-align:center; width:300px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+<h3 style="margin-top:0; color:#e74c3c;">🏆 Top 10 진입 🏆</h3>
+<p style="font-size:14px; color:#333; font-weight:bold; margin-bottom:15px;">축하합니다! 랭킹에 등록할<br>이름(닉네임)을 입력해주세요.</p>
+<input type="text" id="cnation-prompt-input" maxlength="20" style="width:80%; padding:10px; margin-bottom:20px; border:2px solid #ccc; border-radius:8px; font-size:16px;">
+<br>
+<button class="cnation-btn" style="width:80%; padding:10px; font-size:16px; margin-bottom:10px;" onclick="cnationSubmitName()">확인</button>
+<br>
+<button class="cnation-btn" style="width:80%; padding:10px; font-size:14px; margin-top:0; background-color:#95a5a6; box-shadow:0 5px 0 #7f8c8d;" onclick="cnationCancelName()">이름 입력 안할래요</button>
+</div>
+</div>
+
+<div id="cnation-game-ui">
+<p class="cnation-ui-text"><span id="cnation-lives-display">❤️❤️❤️🤍🤍</span> | <span id="cnation-vocab-container"><span id="cnation-vocab-display" class="cnation-highlight-box">유치원생</span></span> | 난이도: <span id="cnation-game-level" class="cnation-highlight-box">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
+<p id="cnation-question-text">의미</p>
+<div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
+</div>
+
+<div id="cnation-event-msg-container"></div>
+<div id="cnation-feedback-container"><span id="cnation-feedback-text"></span></div>
+<div id="cnation-labels-container">
+<div id="cnation-label-0" class="cnation-word-label">word1</div>
+<div id="cnation-label-1" class="cnation-word-label">word2</div>
+<div id="cnation-label-2" class="cnation-word-label">word3</div>
+<div id="cnation-label-3" class="cnation-word-label">word4</div>
+</div>
+
+<div id="cnation-game-over">
+<h1>GAME OVER!</h1>
+<p class="cnation-ui-text">최종 점수: <span id="cnation-final-score">0</span></p>
+<p class="cnation-ui-text">맞춘 단어: <span id="cnation-final-correct">0</span>개</p>
+<div id="cnation-missed-list"></div>
+<button id="cnation-btn-go-title" class="cnation-btn" onclick="cnationGoToTitle()">타이틀로</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="./word.js"></script>
+<script type="module" src="./cnation-firebase.js"></script>
+<script type="module" src="./cnation-game.js"></script>
+</body>
+</html>
