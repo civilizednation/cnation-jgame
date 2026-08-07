@@ -345,7 +345,7 @@ text-align: center;
 <button class="cnation-btn cnation-btn-rank" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowRanking()">랭킹 확인</button>
 <button class="cnation-btn cnation-btn-info" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowInfo()">게임 설명</button>
 </div>
-<div id="cnation-version-tag">Version 1.2.2</div>
+<div id="cnation-version-tag">Version 1.2.3</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -421,8 +421,7 @@ text-align: center;
 <p class="cnation-ui-text">최종 점수: <span id="cnation-final-score">0</span></p>
 <p class="cnation-ui-text">맞춘 단어: <span id="cnation-final-correct">0</span>개</p>
 <div id="cnation-missed-list"></div>
-<p id="cnation-ranking-check-msg" class="cnation-ui-text" style="color:#f1c40f; margin:15px 0;">랭킹 기록 확인 중...⏳</p>
-<button id="cnation-btn-go-title" class="cnation-btn" onclick="cnationGoToTitle()" style="display:none;">타이틀로</button>
+<button id="cnation-btn-go-title" class="cnation-btn" onclick="cnationGoToTitle()">타이틀로</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -445,6 +444,27 @@ measurementId: "G-7PW1NSP5EQ"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const SCORE_COL = "cnation-snake-scores";
+
+// 사전 로딩 전역 변수 (캐시 데이터)
+let cnationCachedScores = { kindergarten: [], elementary: [], middle: [], high: [] };
+
+// 앱 시작 시 Firebase 랭킹 데이터 미리 로드 (Pre-fetch)
+async function cnationPreloadRankings() {
+  const levels = ['kindergarten', 'elementary', 'middle', 'high'];
+  try {
+    const promises = levels.map(lvl => getDoc(doc(db, SCORE_COL, lvl)));
+    const snaps = await Promise.all(promises);
+    snaps.forEach((snap, idx) => {
+      let lvl = levels[idx];
+      if (snap.exists() && snap.data().scores) {
+        cnationCachedScores[lvl] = snap.data().scores;
+      }
+    });
+  } catch (e) {
+    console.error("Preload error:", e);
+  }
+}
+cnationPreloadRankings();
 
 const cnationColorConfig = {
 green: { hHex: 0x145a32, bHex: 0x58d68d, hCss: '#145a32', bCss: '#58d68d' },
@@ -707,10 +727,12 @@ document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'none';
 document.getElementById('cnation-start-screen').style.display = 'flex';
 cnationGameState = 'TITLE';
+cnationPreloadRankings(); // 타이틀 돌아올 때 백그라운드 갱신
 for(let i=0; i<4; i++) { document.getElementById('cnation-label-'+i).style.display = 'none'; }
 };
 
-window.cnationShowRanking = async function() {
+// 메모리에 로드된 점수를 딜레이 없이 보여주는 랭킹 출력 함수
+window.cnationShowRanking = function() {
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-ranking-screen').style.display = 'flex';
 const container = document.getElementById('cnation-ranking-content');
@@ -720,21 +742,15 @@ const levels = [
 { key: 'elementary', name: '초등학생', color: '#2980b9' },
 { key: 'kindergarten', name: '유치원생', color: '#16a085' }
 ];
+
 let html = '';
 for (let lvl of levels) {
-html += `<div style="background:#ffffff; border-radius:12px; padding:15px; margin-bottom:20px; border:2px solid ${lvl.color}; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+let tableHtml = `<div style="background:#ffffff; border-radius:12px; padding:15px; margin-bottom:20px; border:2px solid ${lvl.color}; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 <h2 style="margin-top:0; margin-bottom:10px; color:${lvl.color}; text-align:center; font-size:22px;">${lvl.name}</h2>
-<div id="rank-content-${lvl.key}"><p style="text-align:center; font-weight:bold; color:#666;">데이터를 불러오는 중...</p></div></div>`;
-}
-container.innerHTML = html;
-const promises = levels.map(lvl => getDoc(doc(db, SCORE_COL, lvl.key)));
-try {
-const snaps = await Promise.all(promises);
-snaps.forEach((snap, idx) => {
-let lvl = levels[idx];
-let tableHtml = '<table class="ranking-table"><tr><th>순위</th><th>이름</th><th>점수</th></tr>';
-if (snap.exists() && snap.data().scores && snap.data().scores.length > 0) {
-const scores = snap.data().scores;
+<table class="ranking-table"><tr><th>순위</th><th>이름</th><th>점수</th></tr>`;
+
+let scores = cnationCachedScores[lvl.key] || [];
+if (scores.length > 0) {
 scores.forEach((s, i) => {
 let icon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}위`;
 tableHtml += `<tr><td>${icon}</td><td style="color:#000;">${s.name}</td><td style="color:#e74c3c;">${s.score}</td></tr>`;
@@ -742,12 +758,10 @@ tableHtml += `<tr><td>${icon}</td><td style="color:#000;">${s.name}</td><td styl
 } else {
 tableHtml += `<tr><td colspan="3" style="padding:15px; color:#999;">아직 등록된 랭킹이 없습니다.</td></tr>`;
 }
-tableHtml += '</table>';
-document.getElementById(`rank-content-${lvl.key}`).innerHTML = tableHtml;
-});
-} catch (e) {
-levels.forEach(lvl => { document.getElementById(`rank-content-${lvl.key}`).innerHTML = `<p style="text-align:center; color:#e74c3c; font-weight:bold;">데이터를 가져오지 못했습니다.</p>`; });
+tableHtml += '</table></div>';
+html += tableHtml;
 }
+container.innerHTML = html;
 };
 
 window.cnationCloseRanking = function() {
@@ -769,21 +783,32 @@ window.cnationResetRanking = async function() {
 let pw = prompt("관리자 비밀번호를 입력하세요:");
 if (pw === "1257") {
 const levels = ['kindergarten', 'elementary', 'middle', 'high'];
-for (let lvl of levels) { await setDoc(doc(db, SCORE_COL, lvl), { scores: [] }); }
+for (let lvl of levels) {
+  await setDoc(doc(db, SCORE_COL, lvl), { scores: [] });
+  cnationCachedScores[lvl] = [];
+}
 alert("전체 랭킹이 성공적으로 초기화되었습니다.");
 window.cnationShowRanking();
 } else if (pw !== null) { alert("비밀번호가 틀렸습니다."); }
 };
 
-async function cnationHandleScore(score, levelKey) {
+// 메모리에 캐시된 데이터로 딜레이 없이 신기록 판정
+function cnationHandleScore(score, levelKey) {
 if (score <= 0) return;
-const docRef = doc(db, SCORE_COL, levelKey);
-let topScores = [];
-try { const snap = await getDoc(docRef); if (snap.exists()) { topScores = snap.data().scores || []; } } catch (e) { console.error(e); }
+let topScores = cnationCachedScores[levelKey] || [];
 let isHighScore = false;
-if (topScores.length < 10) { isHighScore = true; } else { const minScore = topScores[topScores.length - 1].score; if (score > minScore) isHighScore = true; }
+
+if (topScores.length < 10) {
+isHighScore = true;
+} else {
+const minScore = topScores[topScores.length - 1].score;
+if (score > minScore) isHighScore = true;
+}
+
 if (isHighScore) {
-cnationPendingScore = score; cnationPendingLevel = levelKey; cnationPendingScoresList = topScores;
+cnationPendingScore = score;
+cnationPendingLevel = levelKey;
+cnationPendingScoresList = topScores;
 document.getElementById('cnation-prompt-input').value = '';
 document.getElementById('cnation-prompt-screen').style.display = 'flex';
 }
@@ -793,11 +818,18 @@ window.cnationSubmitName = async function() {
 let name = document.getElementById('cnation-prompt-input').value.trim();
 if(!name) { alert("이름을 입력해주세요!"); return; }
 document.getElementById('cnation-prompt-screen').style.display = 'none';
+
 name = name.substring(0, 20);
 cnationPendingScoresList.push({ name: name, score: cnationPendingScore });
 cnationPendingScoresList.sort((a, b) => b.score - a.score);
 cnationPendingScoresList = cnationPendingScoresList.slice(0, 10);
-try { await setDoc(doc(db, SCORE_COL, cnationPendingLevel), { scores: cnationPendingScoresList }); } catch(e) { console.error(e); }
+
+// 메모리 사전 업데이트
+cnationCachedScores[cnationPendingLevel] = cnationPendingScoresList;
+
+try {
+await setDoc(doc(db, SCORE_COL, cnationPendingLevel), { scores: cnationPendingScoresList });
+} catch(e) { console.error("Save error", e); }
 };
 
 window.cnationCancelName = function() {
@@ -989,15 +1021,8 @@ document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
-let btn = document.getElementById('cnation-btn-go-title');
-let msg = document.getElementById('cnation-ranking-check-msg');
-if(btn) btn.style.display = 'none';
-if(msg) msg.style.display = 'block';
-
-cnationHandleScore(cnationScore, levelKey).then(() => {
-if(btn) btn.style.display = 'block';
-if(msg) msg.style.display = 'none';
-});
+// 사전 로드된 데이터로 즉시 신기록 판정
+cnationHandleScore(cnationScore, levelKey);
 }
 
 function cnationPlayerTick() {
