@@ -168,6 +168,25 @@ font-size: 18px;
 box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 border: 2px solid #ddd;
 }
+#cnation-health-msg {
+display: none;
+position: absolute;
+bottom: 100px;
+width: 100%;
+text-align: center;
+z-index: 25;
+pointer-events: none;
+}
+.cnation-health-span {
+padding: 8px 16px;
+background: rgba(255, 105, 180, 0.95);
+border-radius: 20px;
+font-weight: bold;
+font-size: 18px;
+box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+border: 2px solid #fff;
+color: #fff;
+}
 .cnation-word-label {
 position: absolute;
 color: #fff;
@@ -260,20 +279,24 @@ font-weight: bold;
 
 <button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
 <button class="cnation-btn cnation-btn-rank" onclick="cnationShowRanking()">게임 랭킹 확인</button>
-<div id="cnation-version-tag">Version 1.0.5</div>
+<div id="cnation-version-tag">Version 1.0.6</div>
 </div>
 
 <div id="cnation-ranking-screen">
-<h1>🏆 랭킹 Top 5 🏆</h1>
+<h1>🏆 랭킹 Top 10 🏆</h1>
 <div id="cnation-ranking-content" style="width: 90%; max-width: 400px; margin-bottom: 20px;"></div>
 <button class="cnation-btn" onclick="cnationCloseRanking()">돌아가기</button>
 <button onclick="cnationResetRanking()" style="margin-top: 30px; margin-bottom: 30px; font-size: 11px; color: #aaaaaa; background: transparent; border: none; cursor: pointer; text-decoration: underline;">랭킹 리셋 (관리자용)</button>
 </div>
 
 <div id="cnation-game-ui">
-<p class="cnation-ui-text">단어: <span id="cnation-vocab-display" class="cnation-highlight-box">유치원생</span> | 난이도: <span id="cnation-game-level" class="cnation-highlight-box">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
+<p class="cnation-ui-text"><span id="cnation-lives-display">❤️❤️❤️🤍🤍</span> | 단어: <span id="cnation-vocab-display" class="cnation-highlight-box">유치원생</span> | 난이도: <span id="cnation-game-level" class="cnation-highlight-box">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
 <p id="cnation-question-text">의미</p>
 <div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
+</div>
+
+<div id="cnation-health-msg">
+<span class="cnation-health-span">체력 1 회복 💖</span>
 </div>
 
 <div id="cnation-feedback-container">
@@ -298,7 +321,6 @@ font-weight: bold;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="./word.js"></script>
 
-<!-- Firebase SDK (ES Module) -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -469,6 +491,8 @@ let cnationGameStage = 0;
 let cnationBaseInterval = 208;
 let cnationMaxEnemies = 2;
 let cnationMaxTime = 20;
+let cnationLives = 3;
+const cnationMaxLives = 5;
 
 let cnationSelectedVocab = [];
 let cnationCurrentQuestion = null;
@@ -489,13 +513,33 @@ let cnationFoodData = [];
 const cnationGeoSphere = new THREE.SphereGeometry(0.5, 32, 32);
 const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
 
+const cnationHeartShape = new THREE.Shape();
+const hx = 0, hy = 0;
+cnationHeartShape.moveTo( hx + 5, hy + 5 );
+cnationHeartShape.bezierCurveTo( hx + 5, hy + 5, hx + 4, hy, hx, hy );
+cnationHeartShape.bezierCurveTo( hx - 6, hy, hx - 6, hy + 7, hx - 6, hy + 7 );
+cnationHeartShape.bezierCurveTo( hx - 6, hy + 11, hx - 3, hy + 15.4, hx + 5, hy + 19 );
+cnationHeartShape.bezierCurveTo( hx + 12, hy + 15.4, hx + 16, hy + 11, hx + 16, hy + 7 );
+cnationHeartShape.bezierCurveTo( hx + 16, hy + 7, hx + 16, hy, hx + 10, hy );
+cnationHeartShape.bezierCurveTo( hx + 7, hy, hx + 5, hy + 5, hx + 5, hy + 5 );
+const cnationExtrudeSettings = { depth: 2, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 1, bevelThickness: 1 };
+const cnationGeoHeart = new THREE.ExtrudeGeometry( cnationHeartShape, cnationExtrudeSettings );
+cnationGeoHeart.center();
+cnationGeoHeart.scale(0.035, -0.035, 0.035);
+
 const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0x145a32 });
 const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0x58d68d });
-
 const cnationMatEnemyHead = new THREE.MeshPhongMaterial({ color: 0x333333 });
 const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
-
 const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700 });
+const cnationMatHeart = new THREE.MeshPhongMaterial({ color: 0xff3366 });
+
+function cnationUpdateLivesUI() {
+let hearts = "";
+for(let i=0; i<cnationLives; i++) hearts += "❤️";
+for(let i=cnationLives; i<cnationMaxLives; i++) hearts += "🤍";
+document.getElementById('cnation-lives-display').innerText = hearts;
+}
 
 window.cnationStartGame = function() {
 cnationInitAudio();
@@ -519,6 +563,7 @@ document.getElementById('cnation-game-ui').style.display = 'block';
 
 document.getElementById('cnation-feedback-text').style.display = 'none';
 document.getElementById('cnation-feedback-text').innerHTML = '';
+document.getElementById('cnation-health-msg').style.display = 'none';
 
 cnationAdjustCamera();
 cnationResetWorld();
@@ -542,10 +587,10 @@ document.getElementById('cnation-ranking-screen').style.display = 'flex';
 const container = document.getElementById('cnation-ranking-content');
 
 const levels = [
-{ key: 'kindergarten', name: '유치원생', color: '#16a085' },
-{ key: 'elementary', name: '초등학생', color: '#2980b9' },
+{ key: 'high', name: '고등학생', color: '#c0392b' },
 { key: 'middle', name: '중학생', color: '#8e44ad' },
-{ key: 'high', name: '고등학생', color: '#c0392b' }
+{ key: 'elementary', name: '초등학생', color: '#2980b9' },
+{ key: 'kindergarten', name: '유치원생', color: '#16a085' }
 ];
 
 let html = '';
@@ -614,7 +659,7 @@ console.error("Firebase fetch error", e);
 }
 
 let isHighScore = false;
-if (topScores.length < 5) {
+if (topScores.length < 10) {
 isHighScore = true;
 } else {
 const minScore = topScores[topScores.length - 1].score;
@@ -622,12 +667,12 @@ if (score > minScore) isHighScore = true;
 }
 
 if (isHighScore) {
-let name = prompt(`축하합니다! [${document.getElementById('cnation-level-select').options[document.getElementById('cnation-level-select').selectedIndex].text}] Top 5 랭킹에 진입하셨습니다!\n\n이름이나 닉네임을 입력해주세요 (20자 이내):`);
+let name = prompt(`축하합니다! [${document.getElementById('cnation-level-select').options[document.getElementById('cnation-level-select').selectedIndex].text}] Top 10 랭킹에 진입하셨습니다!\n\n이름이나 닉네임을 입력해주세요 (20자 이내):`);
 if (name) {
 name = name.substring(0, 20);
 topScores.push({ name: name, score: score });
 topScores.sort((a, b) => b.score - a.score);
-topScores = topScores.slice(0, 5);
+topScores = topScores.slice(0, 10);
 try {
 await setDoc(docRef, { scores: topScores });
 alert("랭킹이 등록되었습니다! 랭킹 확인 화면에서 순위를 확인해보세요.");
@@ -679,6 +724,8 @@ cnationFoodData = [];
 cnationScore = 0;
 cnationCorrectAnswers = 0;
 cnationMissedWords = [];
+cnationLives = 3;
+cnationUpdateLivesUI();
 document.getElementById('cnation-score-val').innerText = cnationScore;
 cnationPlayerDir = { x: 0, y: -1 };
 cnationPlayerNextDir = { x: 0, y: -1 };
@@ -722,6 +769,8 @@ let choices = shuffled.slice(0, 4);
 cnationCurrentQuestion = choices[Math.floor(Math.random() * 4)];
 document.getElementById('cnation-question-text').innerText = cnationCurrentQuestion.ko;
 
+let isHeartSpawn = Math.random() < 0.05;
+
 for(let i=0; i<4; i++) {
 let valid = false;
 let rx, rz;
@@ -736,10 +785,20 @@ if(Math.abs(f.x - rx) < 4 && Math.abs(f.z - rz) < 4) valid = false;
 }
 attempts++;
 }
+
 let isCorrect = (choices[i].en === cnationCurrentQuestion.en);
-let m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
+let m;
+let isThisHeart = false;
+
+if(isCorrect && isHeartSpawn) {
+m = new THREE.Mesh(cnationGeoHeart, cnationMatHeart);
+isThisHeart = true;
+} else {
+m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
+}
+
 m.position.set(rx, 0.5, rz);
-cnationFoodData.push({ x: rx, z: rz, mesh: m, word: choices[i].en, isCorrect: isCorrect });
+cnationFoodData.push({ x: rx, z: rz, mesh: m, word: choices[i].en, isCorrect: isCorrect, isHeart: isThisHeart });
 cnationScene.add(m);
 
 let lbl = document.getElementById('cnation-label-' + i);
@@ -760,13 +819,16 @@ cnationScore -= 5;
 if(cnationScore < 0) cnationScore = 0;
 document.getElementById('cnation-score-val').innerText = cnationScore;
 
+cnationLives--;
+cnationUpdateLivesUI();
+
 if(cnationPlayerLogic.length > 0) {
 cnationPlayerLogic.pop();
 let m = cnationPlayerMeshes.pop();
 cnationScene.remove(m);
 }
 
-if(cnationPlayerLogic.length === 0) {
+if(cnationLives <= 0 || cnationPlayerLogic.length === 0) {
 cnationGameOver();
 } else {
 cnationSpawnQuestion();
@@ -876,6 +938,14 @@ let fb = document.getElementById('cnation-feedback-text');
 fb.innerHTML = `<span style="color:#000000;">${cnationCurrentQuestion.en} (${cnationCurrentQuestion.ko}) 정답 입니다.</span>`;
 fb.style.display = 'inline-block';
 
+if(cnationFoodData[pAteIndex].isHeart && cnationLives < cnationMaxLives) {
+cnationLives++;
+cnationUpdateLivesUI();
+let hMsg = document.getElementById('cnation-health-msg');
+hMsg.style.display = 'block';
+setTimeout(() => { hMsg.style.display = 'none'; }, 2000);
+}
+
 willGrow = true;
 cnationScore += 10; cnationCorrectAnswers++;
 document.getElementById('cnation-score-val').innerText = cnationScore;
@@ -972,7 +1042,11 @@ if(cnationTimeLeft < 4) fill.style.background = '#ff0000';
 if(cnationTimeLeft <= 0) cnationPenalty();
 
 cnationFoodData.forEach(f => {
+if(f.isHeart) {
+f.mesh.rotation.y += 0.05;
+} else {
 f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03;
+}
 });
 
 if (time - cnationLastTickTime > cnationBaseInterval) {
