@@ -12,7 +12,7 @@ background-color: #34495e;
 font-family: 'Comic Sans MS', 'Malgun Gothic', sans-serif;
 touch-action: none;
 }
-#cnation-start-screen, #cnation-game-over, #cnation-ranking-screen {
+#cnation-start-screen, #cnation-game-over, #cnation-ranking-screen, #cnation-prompt-screen {
 position: absolute;
 top: 0; left: 0; width: 100%; height: 100%;
 display: flex;
@@ -32,6 +32,11 @@ justify-content: flex-start;
 padding-top: 30px;
 overflow-y: auto;
 z-index: 40;
+}
+#cnation-prompt-screen {
+display: none;
+background: rgba(0, 0, 0, 0.8);
+z-index: 50;
 }
 h1 {
 color: #000000;
@@ -67,17 +72,22 @@ display: flex;
 justify-content: center;
 align-items: center;
 margin-bottom: 15px;
-gap: 2px;
+gap: 0px;
 background: #e0e0e0;
-padding: 8px 15px;
-border-radius: 20px;
+padding: 10px 20px;
+border-radius: 25px;
 border: 1px solid #ccc;
 }
 .cnation-preview-dot {
 width: 24px;
 height: 24px;
 border-radius: 50%;
-box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.7);
+box-shadow: inset -4px -4px 8px rgba(0,0,0,0.4), inset 2px 2px 6px rgba(255,255,255,0.6);
+position: relative;
+}
+.cnation-preview-body {
+border-right: 4px solid rgba(0,0,0,0.25);
+margin-left: -4px;
 }
 .cnation-btn {
 background-color: #333333;
@@ -239,6 +249,12 @@ padding: 8px;
 color: #555;
 font-weight: bold;
 }
+#cnation-heart-label {
+background: transparent;
+padding: 0;
+text-shadow: none;
+font-size: 28px;
+}
 </style>
 </head>
 <body>
@@ -271,15 +287,22 @@ font-weight: bold;
 </select>
 
 <div id="cnation-worm-preview">
-<div id="cnation-preview-head" class="cnation-preview-dot"></div>
-<div id="cnation-preview-body1" class="cnation-preview-dot"></div>
-<div id="cnation-preview-body2" class="cnation-preview-dot"></div>
-<div id="cnation-preview-body3" class="cnation-preview-dot"></div>
+<div id="cnation-preview-head" class="cnation-preview-dot" style="z-index:4;">
+<div style="position: absolute; top: 4px; left: 3px; width: 7px; height: 7px; background: white; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+<div style="width: 3px; height: 3px; background: black; border-radius: 50%; position: absolute; bottom: 1px; right: 1px;"></div>
+</div>
+<div style="position: absolute; top: 4px; right: 3px; width: 7px; height: 7px; background: white; border-radius: 50%; box-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+<div style="width: 3px; height: 3px; background: black; border-radius: 50%; position: absolute; bottom: 1px; right: 1px;"></div>
+</div>
+</div>
+<div id="cnation-preview-body1" class="cnation-preview-dot cnation-preview-body" style="z-index:3;"></div>
+<div id="cnation-preview-body2" class="cnation-preview-dot cnation-preview-body" style="z-index:2;"></div>
+<div id="cnation-preview-body3" class="cnation-preview-dot" style="z-index:1; transform: scale(0.65); border-radius: 40% 60% 60% 40%;"></div>
 </div>
 
 <button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
 <button class="cnation-btn cnation-btn-rank" onclick="cnationShowRanking()">게임 랭킹 확인</button>
-<div id="cnation-version-tag">Version 1.0.6</div>
+<div id="cnation-version-tag">Version 1.0.8</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -287,6 +310,18 @@ font-weight: bold;
 <div id="cnation-ranking-content" style="width: 90%; max-width: 400px; margin-bottom: 20px;"></div>
 <button class="cnation-btn" onclick="cnationCloseRanking()">돌아가기</button>
 <button onclick="cnationResetRanking()" style="margin-top: 30px; margin-bottom: 30px; font-size: 11px; color: #aaaaaa; background: transparent; border: none; cursor: pointer; text-decoration: underline;">랭킹 리셋 (관리자용)</button>
+</div>
+
+<div id="cnation-prompt-screen">
+<div style="background:#fff; padding:20px; border-radius:15px; text-align:center; width:300px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+<h3 style="margin-top:0; color:#e74c3c;">🏆 Top 10 진입 🏆</h3>
+<p style="font-size:14px; color:#333; font-weight:bold; margin-bottom:15px;">축하합니다! 랭킹에 등록할<br>이름(닉네임)을 입력해주세요.</p>
+<input type="text" id="cnation-prompt-input" maxlength="20" style="width:80%; padding:10px; margin-bottom:20px; border:2px solid #ccc; border-radius:8px; font-size:16px;">
+<br>
+<button class="cnation-btn" style="width:80%; padding:10px; font-size:16px; margin-bottom:10px;" onclick="cnationSubmitName()">확인</button>
+<br>
+<button class="cnation-btn" style="width:80%; padding:10px; font-size:14px; margin-top:0; background-color:#95a5a6; box-shadow:0 5px 0 #7f8c8d;" onclick="cnationCancelName()">이름 입력 안할래요</button>
+</div>
 </div>
 
 <div id="cnation-game-ui">
@@ -308,6 +343,7 @@ font-weight: bold;
 <div id="cnation-label-1" class="cnation-word-label">word2</div>
 <div id="cnation-label-2" class="cnation-word-label">word3</div>
 <div id="cnation-label-3" class="cnation-word-label">word4</div>
+<div id="cnation-heart-label" class="cnation-word-label">❤️</div>
 </div>
 
 <div id="cnation-game-over">
@@ -348,13 +384,34 @@ yellow: { hHex: 0x7d6608, bHex: 0xf7dc6f, hCss: '#7d6608', bCss: '#f7dc6f' },
 purple: { hHex: 0x4a235a, bHex: 0xbb8fce, hCss: '#4a235a', bCss: '#bb8fce' }
 };
 
-window.cnationUpdatePreview = function() {
-let colorKey = document.getElementById('cnation-color-select').value;
-let conf = cnationColorConfig[colorKey];
+const cnationMatPlayerHead = new THREE.MeshStandardMaterial({ color: 0x145a32, roughness: 0.4, metalness: 0.1 });
+const cnationMatPlayerBody = new THREE.MeshStandardMaterial({ color: 0x58d68d, roughness: 0.4, metalness: 0.1 });
+const cnationMatPlayerRing = new THREE.MeshStandardMaterial({ color: 0x27ae60, roughness: 0.6, metalness: 0.1 });
+
+const cnationMatEnemyHead = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.4, metalness: 0.1 });
+const cnationMatEnemyBody = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.4, metalness: 0.1 });
+const cnationMatEnemyRing = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.6, metalness: 0.1 });
+
+const cnationMatFood = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.3 });
+const cnationMatHeart = new THREE.MeshStandardMaterial({ color: 0xff3366, roughness: 0.3 });
+
+function cnationUpdateWormColors(conf) {
+cnationMatPlayerHead.color.setHex(conf.hHex);
+cnationMatPlayerBody.color.setHex(conf.bHex);
+let hsl = {};
+cnationMatPlayerBody.color.getHSL(hsl);
+cnationMatPlayerRing.color.setHSL(hsl.h, hsl.s, Math.max(0, hsl.l - 0.2));
+
 document.getElementById('cnation-preview-head').style.backgroundColor = conf.hCss;
 document.getElementById('cnation-preview-body1').style.backgroundColor = conf.bCss;
 document.getElementById('cnation-preview-body2').style.backgroundColor = conf.bCss;
 document.getElementById('cnation-preview-body3').style.backgroundColor = conf.bCss;
+}
+
+window.cnationUpdatePreview = function() {
+let colorKey = document.getElementById('cnation-color-select').value;
+let conf = cnationColorConfig[colorKey];
+cnationUpdateWormColors(conf);
 };
 window.cnationUpdatePreview();
 
@@ -427,6 +484,14 @@ gain.gain.setValueAtTime(0.05, now);
 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 osc.start(now);
 osc.stop(now + 0.1);
+} else if (type === 'heal') {
+osc.type = 'sine';
+osc.frequency.setValueAtTime(440, now);
+osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+gain.gain.setValueAtTime(targetVolume, now);
+gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+osc.start(now);
+osc.stop(now + 0.2);
 }
 }
 
@@ -440,11 +505,9 @@ function cnationAdjustCamera() {
 let aspect = window.innerWidth / window.innerHeight;
 cnationCamera.aspect = aspect;
 cnationCamera.updateProjectionMatrix();
-
 let fovRad = (cnationCamera.fov * Math.PI) / 180;
 let requiredWidth = cnationBounds.x * 2 + 2;
 let finalDistance = (requiredWidth / 2) / (Math.tan(fovRad / 2) * aspect);
-
 let topOffset = -2.5;
 cnationCamera.position.set(0, finalDistance, topOffset);
 cnationCamera.lookAt(0, 0, topOffset);
@@ -454,14 +517,14 @@ const cnationRenderer = new THREE.WebGLRenderer({ antialias: true });
 cnationRenderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(cnationRenderer.domElement);
 
-const cnationAmbientLight = new THREE.AmbientLight(0xffffff, 0.7);
+const cnationAmbientLight = new THREE.AmbientLight(0xffffff, 0.8);
 cnationScene.add(cnationAmbientLight);
-const cnationDirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-cnationDirLight.position.set(10, 20, 5);
+const cnationDirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+cnationDirLight.position.set(10, 20, 10);
 cnationScene.add(cnationDirLight);
 
 const cnationFloorGeo = new THREE.PlaneGeometry(cnationBounds.x * 2 + 2, cnationBounds.y * 2 + 2);
-const cnationFloorMat = new THREE.MeshPhongMaterial({ color: 0x34495e });
+const cnationFloorMat = new THREE.MeshStandardMaterial({ color: 0x34495e, roughness: 0.8 });
 const cnationFloor = new THREE.Mesh(cnationFloorGeo, cnationFloorMat);
 cnationFloor.rotation.x = -Math.PI / 2;
 cnationFloor.position.y = -0.5;
@@ -469,7 +532,7 @@ cnationScene.add(cnationFloor);
 
 const cnationWallGeoX = new THREE.BoxGeometry(cnationBounds.x * 2 + 2, 0.8, 0.8);
 const cnationWallGeoY = new THREE.BoxGeometry(0.8, 0.8, cnationBounds.y * 2 + 2);
-const cnationWallMat = new THREE.MeshPhongMaterial({ color: 0x95a5a6 });
+const cnationWallMat = new THREE.MeshStandardMaterial({ color: 0x95a5a6, roughness: 0.5 });
 
 const cnationWallTop = new THREE.Mesh(cnationWallGeoX, cnationWallMat);
 cnationWallTop.position.set(0, 0, -cnationBounds.y - 0.5);
@@ -509,8 +572,15 @@ let cnationLastEnemyTickTime = 0;
 
 let cnationEnemies = [];
 let cnationFoodData = [];
+let cnationHeartItem = null;
 
-const cnationGeoSphere = new THREE.SphereGeometry(0.5, 32, 32);
+const cnationGeoBody = new THREE.SphereGeometry(0.45, 32, 32);
+const cnationGeoRing = new THREE.TorusGeometry(0.45, 0.08, 12, 24);
+const cnationGeoEye = new THREE.SphereGeometry(0.12, 16, 16);
+const cnationGeoPupil = new THREE.SphereGeometry(0.06, 16, 16);
+const cnationMatWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
+const cnationMatBlack = new THREE.MeshBasicMaterial({ color: 0x000000 });
+
 const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
 
 const cnationHeartShape = new THREE.Shape();
@@ -527,12 +597,40 @@ const cnationGeoHeart = new THREE.ExtrudeGeometry( cnationHeartShape, cnationExt
 cnationGeoHeart.center();
 cnationGeoHeart.scale(0.035, -0.035, 0.035);
 
-const cnationMatPlayerHead = new THREE.MeshPhongMaterial({ color: 0x145a32 });
-const cnationMatPlayerBody = new THREE.MeshPhongMaterial({ color: 0x58d68d });
-const cnationMatEnemyHead = new THREE.MeshPhongMaterial({ color: 0x333333 });
-const cnationMatEnemyBody = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
-const cnationMatFood = new THREE.MeshPhongMaterial({ color: 0xffd700 });
-const cnationMatHeart = new THREE.MeshPhongMaterial({ color: 0xff3366 });
+function cnationCreateHeadMesh(isEnemy) {
+const group = new THREE.Group();
+const head = new THREE.Mesh(cnationGeoBody, isEnemy ? cnationMatEnemyHead : cnationMatPlayerHead);
+group.add(head);
+
+const leftEye = new THREE.Mesh(cnationGeoEye, cnationMatWhite);
+leftEye.position.set(-0.2, 0.2, 0.35);
+const leftPupil = new THREE.Mesh(cnationGeoPupil, cnationMatBlack);
+leftPupil.position.set(0, 0, 0.1);
+leftEye.add(leftPupil);
+group.add(leftEye);
+
+const rightEye = new THREE.Mesh(cnationGeoEye, cnationMatWhite);
+rightEye.position.set(0.2, 0.2, 0.35);
+const rightPupil = new THREE.Mesh(cnationGeoPupil, cnationMatBlack);
+rightPupil.position.set(0, 0, 0.1);
+rightEye.add(rightPupil);
+group.add(rightEye);
+
+return group;
+}
+
+function cnationCreateBodyMesh(isEnemy) {
+const group = new THREE.Group();
+const body = new THREE.Mesh(cnationGeoBody, isEnemy ? cnationMatEnemyBody : cnationMatPlayerBody);
+group.add(body);
+const ring = new THREE.Mesh(cnationGeoRing, isEnemy ? cnationMatEnemyRing : cnationMatPlayerRing);
+group.add(ring);
+return group;
+}
+
+let cnationPendingScore = 0;
+let cnationPendingLevel = '';
+let cnationPendingScoresList = [];
 
 function cnationUpdateLivesUI() {
 let hearts = "";
@@ -546,8 +644,7 @@ cnationInitAudio();
 
 let colorKey = document.getElementById('cnation-color-select').value;
 let conf = cnationColorConfig[colorKey];
-cnationMatPlayerHead.color.setHex(conf.hHex);
-cnationMatPlayerBody.color.setHex(conf.bHex);
+cnationUpdateWormColors(conf);
 
 let levelSel = document.getElementById('cnation-level-select');
 let levelKey = levelSel.value;
@@ -559,6 +656,7 @@ document.getElementById('cnation-vocab-display').innerText = levelText;
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-ranking-screen').style.display = 'none';
+document.getElementById('cnation-prompt-screen').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'block';
 
 document.getElementById('cnation-feedback-text').style.display = 'none';
@@ -579,6 +677,7 @@ cnationGameState = 'TITLE';
 for(let i=0; i<4; i++) {
 document.getElementById('cnation-label-'+i).style.display = 'none';
 }
+document.getElementById('cnation-heart-label').style.display = 'none';
 };
 
 window.cnationShowRanking = async function() {
@@ -604,9 +703,12 @@ html += `<div style="background:#ffffff; border-radius:12px; padding:15px; margi
 }
 container.innerHTML = html;
 
-for (let lvl of levels) {
+const promises = levels.map(lvl => getDoc(doc(db, SCORE_COL, lvl.key)));
+
 try {
-const snap = await getDoc(doc(db, SCORE_COL, lvl.key));
+const snaps = await Promise.all(promises);
+snaps.forEach((snap, idx) => {
+let lvl = levels[idx];
 let tableHtml = '<table class="ranking-table"><tr><th>순위</th><th>이름</th><th>점수</th></tr>';
 if (snap.exists() && snap.data().scores && snap.data().scores.length > 0) {
 const scores = snap.data().scores;
@@ -619,10 +721,12 @@ tableHtml += `<tr><td colspan="3" style="padding:15px; color:#999;">아직 등�
 }
 tableHtml += '</table>';
 document.getElementById(`rank-content-${lvl.key}`).innerHTML = tableHtml;
+});
 } catch (e) {
 console.error("Firebase Error: ", e);
+levels.forEach(lvl => {
 document.getElementById(`rank-content-${lvl.key}`).innerHTML = `<p style="text-align:center; color:#e74c3c; font-weight:bold;">데이터를 가져오지 못했습니다.</p>`;
-}
+});
 }
 };
 
@@ -667,22 +771,37 @@ if (score > minScore) isHighScore = true;
 }
 
 if (isHighScore) {
-let name = prompt(`축하합니다! [${document.getElementById('cnation-level-select').options[document.getElementById('cnation-level-select').selectedIndex].text}] Top 10 랭킹에 진입하셨습니다!\n\n이름이나 닉네임을 입력해주세요 (20자 이내):`);
-if (name) {
+cnationPendingScore = score;
+cnationPendingLevel = levelKey;
+cnationPendingScoresList = topScores;
+document.getElementById('cnation-prompt-input').value = '';
+document.getElementById('cnation-prompt-screen').style.display = 'flex';
+}
+}
+
+window.cnationSubmitName = async function() {
+let name = document.getElementById('cnation-prompt-input').value.trim();
+if(!name) {
+alert("이름을 입력해주세요!");
+return;
+}
+document.getElementById('cnation-prompt-screen').style.display = 'none';
+
 name = name.substring(0, 20);
-topScores.push({ name: name, score: score });
-topScores.sort((a, b) => b.score - a.score);
-topScores = topScores.slice(0, 10);
+cnationPendingScoresList.push({ name: name, score: cnationPendingScore });
+cnationPendingScoresList.sort((a, b) => b.score - a.score);
+cnationPendingScoresList = cnationPendingScoresList.slice(0, 10);
+
 try {
-await setDoc(docRef, { scores: topScores });
-alert("랭킹이 등록되었습니다! 랭킹 확인 화면에서 순위를 확인해보세요.");
+await setDoc(doc(db, SCORE_COL, cnationPendingLevel), { scores: cnationPendingScoresList });
 } catch(e) {
 console.error("Save error", e);
-alert("저장 중 오류가 발생했습니다.");
 }
-}
-}
-}
+};
+
+window.cnationCancelName = function() {
+document.getElementById('cnation-prompt-screen').style.display = 'none';
+};
 
 function cnationUpdateStage() {
 let levelSpan = document.getElementById('cnation-game-level');
@@ -717,6 +836,12 @@ cnationPlayerMeshes.forEach(m => cnationScene.remove(m));
 cnationEnemies.forEach(e => e.meshes.forEach(m => cnationScene.remove(m)));
 cnationFoodData.forEach(f => cnationScene.remove(f.mesh));
 
+if(cnationHeartItem) {
+cnationScene.remove(cnationHeartItem.mesh);
+cnationHeartItem = null;
+}
+document.getElementById('cnation-heart-label').style.display = 'none';
+
 cnationPlayerLogic = [];
 cnationPlayerMeshes = [];
 cnationEnemies = [];
@@ -734,7 +859,7 @@ cnationLastEnemyTickTime = performance.now();
 
 for (let i = 0; i < 4; i++) {
 cnationPlayerLogic.push({ x: 0, z: i });
-let m = new THREE.Mesh(cnationGeoSphere, i === 0 ? cnationMatPlayerHead : cnationMatPlayerBody);
+let m = i === 0 ? cnationCreateHeadMesh(false) : cnationCreateBodyMesh(false);
 m.position.set(0, 0.5, i);
 cnationPlayerMeshes.push(m);
 cnationScene.add(m);
@@ -750,7 +875,7 @@ let logic = [];
 let meshes = [];
 for (let i = 0; i < 3; i++) {
 logic.push({ x: rx, z: rz + i });
-let m = new THREE.Mesh(cnationGeoSphere, i === 0 ? cnationMatEnemyHead : cnationMatEnemyBody);
+let m = i === 0 ? cnationCreateHeadMesh(true) : cnationCreateBodyMesh(true);
 m.position.set(rx, 0.5, rz + i);
 meshes.push(m);
 cnationScene.add(m);
@@ -761,6 +886,13 @@ cnationEnemies.push({ logic: logic, meshes: meshes, dir: { x: 0, y: -1 } });
 function cnationSpawnQuestion() {
 cnationFoodData.forEach(f => cnationScene.remove(f.mesh));
 cnationFoodData = [];
+
+if(cnationHeartItem) {
+cnationScene.remove(cnationHeartItem.mesh);
+cnationHeartItem = null;
+}
+document.getElementById('cnation-heart-label').style.display = 'none';
+
 cnationTimeLeft = cnationMaxTime;
 document.getElementById('cnation-timer-fill').style.background = '#00ff00';
 
@@ -768,8 +900,6 @@ let shuffled = [...cnationSelectedVocab].sort(() => 0.5 - Math.random());
 let choices = shuffled.slice(0, 4);
 cnationCurrentQuestion = choices[Math.floor(Math.random() * 4)];
 document.getElementById('cnation-question-text').innerText = cnationCurrentQuestion.ko;
-
-let isHeartSpawn = Math.random() < 0.05;
 
 for(let i=0; i<4; i++) {
 let valid = false;
@@ -787,24 +917,38 @@ attempts++;
 }
 
 let isCorrect = (choices[i].en === cnationCurrentQuestion.en);
-let m;
-let isThisHeart = false;
-
-if(isCorrect && isHeartSpawn) {
-m = new THREE.Mesh(cnationGeoHeart, cnationMatHeart);
-isThisHeart = true;
-} else {
-m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
-}
-
+let m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
 m.position.set(rx, 0.5, rz);
-cnationFoodData.push({ x: rx, z: rz, mesh: m, word: choices[i].en, isCorrect: isCorrect, isHeart: isThisHeart });
+cnationFoodData.push({ x: rx, z: rz, mesh: m, word: choices[i].en, isCorrect: isCorrect });
 cnationScene.add(m);
 
 let lbl = document.getElementById('cnation-label-' + i);
 lbl.innerText = choices[i].en;
 lbl.style.display = 'block';
 }
+
+if(Math.random() < 0.50) {
+let valid = false;
+let rx, rz;
+let attempts = 0;
+while(!valid && attempts < 200) {
+rx = Math.floor(Math.random() * (cnationBounds.x * 2 - 4)) - (cnationBounds.x - 2);
+rz = Math.floor(Math.random() * (cnationBounds.y * 2 - 4)) - (cnationBounds.y - 2);
+valid = true;
+for(let p of cnationPlayerLogic) if(p.x === rx && p.z === rz) valid = false;
+for(let f of cnationFoodData) if(f.x === rx && f.z === rz) valid = false;
+attempts++;
+}
+
+if(valid) {
+let m = new THREE.Mesh(cnationGeoHeart, cnationMatHeart);
+m.position.set(rx, 0.5, rz);
+cnationScene.add(m);
+cnationHeartItem = { x: rx, z: rz, mesh: m };
+document.getElementById('cnation-heart-label').style.display = 'block';
+}
+}
+
 }
 
 function cnationPenalty() {
@@ -856,6 +1000,16 @@ else if(f.x > cnationBounds.x - 2) { offsetX = -(baseFontSize * 2.5); offsetY = 
 lbl.style.left = (x + offsetX) + 'px';
 lbl.style.top = (y + offsetY) + 'px';
 }
+
+if(cnationHeartItem) {
+let pos = cnationHeartItem.mesh.position.clone();
+pos.project(cnationCamera);
+let x = (pos.x * 0.5 + 0.5) * window.innerWidth;
+let y = (pos.y * -0.5 + 0.5) * window.innerHeight;
+let lbl = document.getElementById('cnation-heart-label');
+lbl.style.left = x + 'px';
+lbl.style.top = (y - 15) + 'px';
+}
 }
 
 window.addEventListener('keydown', (e) => {
@@ -901,6 +1055,7 @@ document.getElementById('cnation-missed-list').innerHTML = missedHtml;
 
 document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
+document.getElementById('cnation-heart-label').style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
 setTimeout(() => {
@@ -925,6 +1080,21 @@ if(px === cnationEnemies[i].logic[j].x && pz === cnationEnemies[i].logic[j].z) {
 }
 }
 
+if(cnationHeartItem && px === cnationHeartItem.x && pz === cnationHeartItem.z) {
+cnationPlaySound('heal');
+cnationScene.remove(cnationHeartItem.mesh);
+document.getElementById('cnation-heart-label').style.display = 'none';
+cnationHeartItem = null;
+
+if(cnationLives < cnationMaxLives) {
+cnationLives++;
+cnationUpdateLivesUI();
+let hMsg = document.getElementById('cnation-health-msg');
+hMsg.style.display = 'block';
+setTimeout(() => { hMsg.style.display = 'none'; }, 2000);
+}
+}
+
 let pAteIndex = -1;
 for(let f=0; f<cnationFoodData.length; f++) {
 if(px === cnationFoodData[f].x && pz === cnationFoodData[f].z) { pAteIndex = f; break; }
@@ -937,14 +1107,6 @@ cnationPlaySound('correct');
 let fb = document.getElementById('cnation-feedback-text');
 fb.innerHTML = `<span style="color:#000000;">${cnationCurrentQuestion.en} (${cnationCurrentQuestion.ko}) 정답 입니다.</span>`;
 fb.style.display = 'inline-block';
-
-if(cnationFoodData[pAteIndex].isHeart && cnationLives < cnationMaxLives) {
-cnationLives++;
-cnationUpdateLivesUI();
-let hMsg = document.getElementById('cnation-health-msg');
-hMsg.style.display = 'block';
-setTimeout(() => { hMsg.style.display = 'none'; }, 2000);
-}
 
 willGrow = true;
 cnationScore += 10; cnationCorrectAnswers++;
@@ -959,7 +1121,7 @@ if(cnationGameState === 'GAMEOVER') return;
 
 if(cnationGameState === 'PLAYING') {
 if(willGrow) {
-let m = new THREE.Mesh(cnationGeoSphere, cnationMatPlayerBody);
+let m = cnationCreateBodyMesh(false);
 cnationPlayerMeshes.push(m); cnationScene.add(m);
 cnationPlayerLogic.push({x: cnationPlayerLogic[cnationPlayerLogic.length-1].x, z: cnationPlayerLogic[cnationPlayerLogic.length-1].z});
 }
@@ -1042,12 +1204,12 @@ if(cnationTimeLeft < 4) fill.style.background = '#ff0000';
 if(cnationTimeLeft <= 0) cnationPenalty();
 
 cnationFoodData.forEach(f => {
-if(f.isHeart) {
-f.mesh.rotation.y += 0.05;
-} else {
 f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03;
-}
 });
+
+if(cnationHeartItem) {
+cnationHeartItem.mesh.rotation.y += 0.05;
+}
 
 if (time - cnationLastTickTime > cnationBaseInterval) {
 cnationPlayerTick();
@@ -1063,11 +1225,45 @@ let lerpFactor = 0.12;
 for (let i = 0; i < cnationPlayerMeshes.length; i++) {
 let target = new THREE.Vector3(cnationPlayerLogic[i].x, 0.5, cnationPlayerLogic[i].z);
 cnationPlayerMeshes[i].position.lerp(target, lerpFactor);
+
+if (i === 0) {
+let angle = Math.atan2(cnationPlayerDir.x, cnationPlayerDir.y);
+cnationPlayerMeshes[i].rotation.y = angle;
+cnationPlayerMeshes[i].scale.set(1, 1, 1);
+} else {
+let prevPos = cnationPlayerMeshes[i-1].position;
+let curPos = cnationPlayerMeshes[i].position;
+if (prevPos.distanceTo(curPos) > 0.001) {
+cnationPlayerMeshes[i].lookAt(prevPos);
+}
+if (i === cnationPlayerMeshes.length - 1) {
+cnationPlayerMeshes[i].scale.lerp(new THREE.Vector3(0.5, 0.5, 0.9), 0.2);
+} else {
+cnationPlayerMeshes[i].scale.lerp(new THREE.Vector3(1, 1, 1), 0.2);
+}
+}
 }
 cnationEnemies.forEach(e => {
 for(let i=0; i<e.meshes.length; i++) {
 let target = new THREE.Vector3(e.logic[i].x, 0.5, e.logic[i].z);
 e.meshes[i].position.lerp(target, lerpFactor);
+
+if (i === 0) {
+let angle = Math.atan2(e.dir.x, e.dir.y);
+e.meshes[i].rotation.y = angle;
+e.meshes[i].scale.set(1, 1, 1);
+} else {
+let prevPos = e.meshes[i-1].position;
+let curPos = e.meshes[i].position;
+if (prevPos.distanceTo(curPos) > 0.001) {
+e.meshes[i].lookAt(prevPos);
+}
+if (i === e.meshes.length - 1) {
+e.meshes[i].scale.lerp(new THREE.Vector3(0.5, 0.5, 0.9), 0.2);
+} else {
+e.meshes[i].scale.lerp(new THREE.Vector3(1, 1, 1), 0.2);
+}
+}
 }
 });
 cnationUpdateLabels();
