@@ -249,8 +249,14 @@ let levelText = levelSel.options[levelSel.selectedIndex].text;
 
 cnationIsKidsMode = document.getElementById('cnation-kids-mode-checkbox').checked;
 
-cnationSelectedVocab = cnationWordDB[levelKey];
-document.getElementById('cnation-vocab-display').innerText = levelText + (cnationIsKidsMode ? " (어린이)" : "");
+// 상단 표시 영역 설정 (어린이 모드일 경우 녹색 배경의 '어린이 모드'로 교체)
+let vocabContainer = document.getElementById('cnation-vocab-container');
+if (cnationIsKidsMode) {
+vocabContainer.innerHTML = '<span class="cnation-kids-badge">어린이 모드</span>';
+} else {
+vocabContainer.innerHTML = `<span id="cnation-vocab-display" class="cnation-highlight-box">${levelText}</span>`;
+}
+
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-ranking-screen').style.display = 'none';
