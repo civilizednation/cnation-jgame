@@ -382,12 +382,18 @@ cnationEnemiesFrozen = false;
 cnationTimeLeft = cnationMaxTime;
 document.getElementById('cnation-timer-fill').style.background = '#00ff00';
 
+let count = cnationIsKidsMode ? 3 : 4;
 let shuffled = [...cnationSelectedVocab].sort(() => 0.5 - Math.random());
-let choices = shuffled.slice(0, 4);
-cnationCurrentQuestion = choices[Math.floor(Math.random() * 4)];
+let choices = shuffled.slice(0, count);
+cnationCurrentQuestion = choices[Math.floor(Math.random() * count)];
 document.getElementById('cnation-question-text').innerText = cnationCurrentQuestion.ko;
 
 for(let i=0; i<4; i++) {
+let lbl = document.getElementById('cnation-label-' + i);
+if(i >= count) {
+lbl.style.display = 'none';
+continue;
+}
 let valid = false; let rx, rz; let attempts = 0;
 while(!valid && attempts < 200) {
 rx = Math.floor(Math.random() * (cnationBounds.x * 2 - 4)) - (cnationBounds.x - 2);
@@ -402,7 +408,6 @@ let m = new THREE.Mesh(cnationGeoBox, cnationMatFood);
 m.position.set(rx, 0.5, rz);
 cnationFoodData.push({ x: rx, z: rz, mesh: m, word: choices[i].en, isCorrect: isCorrect });
 cnationScene.add(m);
-let lbl = document.getElementById('cnation-label-' + i);
 lbl.innerText = choices[i].en; lbl.style.display = 'block';
 }
 
@@ -457,7 +462,8 @@ if(cnationLives <= 0 || cnationPlayerLogic.length === 0) { cnationGameOver(); } 
 
 function cnationUpdateLabels() {
 let baseFontSize = Math.min(40, Math.max(16, window.innerWidth * 0.04));
-for(let i=0; i<4; i++) {
+let count = cnationIsKidsMode ? 3 : 4;
+for(let i=0; i<count; i++) {
 let f = cnationFoodData[i]; if(!f) continue;
 let pos = f.mesh.position.clone(); pos.project(cnationCamera);
 let x = (pos.x * 0.5 + 0.5) * window.innerWidth; let y = (pos.y * -0.5 + 0.5) * window.innerHeight;
@@ -503,7 +509,6 @@ document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
-// 어린이 모드가 아닐 때만 랭킹 체크 함수 호출
 if (!cnationIsKidsMode && window.cnationHandleScore) {
   window.cnationHandleScore(cnationScore, levelKey);
 }
