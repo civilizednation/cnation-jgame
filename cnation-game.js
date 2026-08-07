@@ -78,10 +78,13 @@ osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.expo
 gain.gain.setValueAtTime(targetVolume, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
 osc.start(now); osc.stop(now + 0.15);
 } else if (type === 'wrong') {
-let targetVolume = 0.075;
-osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, now); osc.frequency.linearRampToValueAtTime(90, now + 0.2);
-gain.gain.setValueAtTime(targetVolume, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-osc.start(now); osc.stop(now + 0.2);
+let targetVolume = 0.075; // 죽었을 때 효과음과 동일한 볼륨
+osc.type = 'square'; // 명확하게 들리도록 사각파 사용
+osc.frequency.setValueAtTime(250, now); 
+osc.frequency.exponentialRampToValueAtTime(100, now + 0.25);
+gain.gain.setValueAtTime(targetVolume, now); 
+gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+osc.start(now); osc.stop(now + 0.25);
 } else if (type === 'die') {
 let targetVolume = 0.075;
 osc.type = 'square'; osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(60, now + 0.4);
@@ -493,7 +496,9 @@ document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
-cnationHandleScore(cnationScore, levelKey);
+if (window.cnationHandleScore) {
+  window.cnationHandleScore(cnationScore, levelKey);
+}
 }
 
 function cnationPlayerTick() {
