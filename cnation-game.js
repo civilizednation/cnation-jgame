@@ -286,27 +286,6 @@ document.getElementById('cnation-info-screen').style.display = 'none';
 document.getElementById('cnation-start-screen').style.display = 'flex';
 };
 
-function cnationHandleScore(score, levelKey) {
-if (score <= 0) return;
-let topScores = (window.cnationCachedScores && window.cnationCachedScores[levelKey]) || [];
-let isHighScore = false;
-
-if (topScores.length < 10) {
-isHighScore = true;
-} else {
-const minScore = topScores[topScores.length - 1].score;
-if (score > minScore) isHighScore = true;
-}
-
-if (isHighScore) {
-window.cnationPendingScore = score;
-window.cnationPendingLevel = levelKey;
-window.cnationPendingScoresList = topScores;
-document.getElementById('cnation-prompt-input').value = '';
-document.getElementById('cnation-prompt-screen').style.display = 'flex';
-}
-}
-
 window.cnationCancelName = function() {
 document.getElementById('cnation-prompt-screen').style.display = 'none';
 };
@@ -498,6 +477,7 @@ document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
+// 수정된 부분: window 객체에 등록된 랭킹 핸들러 호출
 if (window.cnationHandleScore) {
   window.cnationHandleScore(cnationScore, levelKey);
 }
