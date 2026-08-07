@@ -118,6 +118,7 @@ const cnationBounds = { x: 11, y: 11 };
 const cnationCamera = new THREE.OrthographicCamera(-14, 14, 14, -14, 0.1, 1000);
 
 const cnationRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+cnationRenderer.setPixelRatio(window.devicePixelRatio);
 const canvasWrapper = document.getElementById('canvas-wrapper');
 canvasWrapper.appendChild(cnationRenderer.domElement);
 
@@ -251,7 +252,7 @@ document.getElementById('cnation-lives-display').innerText = hearts;
 function showScreen(screenId) {
 const screens = ['cnation-start-screen', 'cnation-game-ui', 'cnation-game-over', 'cnation-prompt-screen', 'cnation-ranking-screen', 'cnation-info-screen'];
 screens.forEach(id => {
-    document.getElementById(id).style.display = (id === screenId) ? 'flex' : 'none';
+document.getElementById(id).style.display = (id === screenId) ? 'flex' : 'none';
 });
 }
 
@@ -486,7 +487,9 @@ let y = (pos.y * -0.5 + 0.5) * h;
 let lbl = document.getElementById('cnation-label-' + i); 
 lbl.style.fontSize = baseFontSize + 'px';
 let offsetY = -(baseFontSize * 1.5); 
-lbl.style.left = x + 'px'; lbl.style.top = (y + offsetY) + 'px';
+lbl.style.left = '0px';
+lbl.style.top = '0px';
+lbl.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y + offsetY}px, 0)`;
 }
 }
 
@@ -525,9 +528,9 @@ document.getElementById('cnation-final-correct').innerText = cnationCorrectAnswe
 
 let missedHtml = "";
 if(cnationMissedWords.length === 0) { 
-    missedHtml = "틀린 단어가 없습니다!<br>완벽합니다!"; 
+missedHtml = "틀린 단어가 없습니다!<br>완벽합니다!"; 
 } else { 
-    cnationMissedWords.forEach(w => { missedHtml += w.en + " : " + w.ko + "<br>"; }); 
+cnationMissedWords.forEach(w => { missedHtml += w.en + " : " + w.ko + "<br>"; }); 
 }
 document.getElementById('cnation-missed-list').innerHTML = missedHtml;
 
@@ -625,19 +628,24 @@ while(cnationEnemies.length < cnationMaxEnemies) cnationSpawnEnemy();
 
 function cnationAnimate(time) {
 requestAnimationFrame(cnationAnimate);
-let dt = (time - cnationLastFrameTime) / 1000; cnationLastFrameTime = time;
+let dt = (time - cnationLastFrameTime) / 1000; 
+cnationLastFrameTime = time;
+if (dt > 0.1) dt = 0.1; 
+
 if (cnationGameState === 'PLAYING') {
 cnationTimeLeft -= dt;
 let fill = document.getElementById('cnation-timer-fill'); fill.style.width = (cnationTimeLeft / cnationMaxTime * 100) + '%';
 if(cnationTimeLeft < 4) fill.style.background = '#e74c3c';
 if(cnationTimeLeft <= 0) cnationPenalty();
 
-cnationFoodData.forEach(f => { f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03; });
+cnationFoodData.forEach(f => { f.mesh.rotation.x += 1.5 * dt; f.mesh.rotation.y += 1.5 * dt; });
 let enemyInterval = cnationIsKidsMode ? (cnationBaseInterval / 0.7) * 3 : (cnationBaseInterval / 0.7);
 if (time - cnationLastTickTime > cnationBaseInterval) { cnationPlayerTick(); cnationLastTickTime = time; }
 if (cnationMaxEnemies > 0 && time - cnationLastEnemyTickTime > enemyInterval) { cnationEnemyTick(); cnationLastEnemyTickTime = time; }
 
-let lerpFactor = cnationIsKidsMode ? 0.04 : 0.12;
+let lerpFactor = cnationIsKidsMode ? (5.0 * dt) : (12.0 * dt);
+let scaleLerp = 15.0 * dt;
+
 for (let i = 0; i < cnationPlayerMeshes.length; i++) {
 let target = new THREE.Vector3(cnationPlayerLogic[i].x, 0.5, cnationPlayerLogic[i].z); cnationPlayerMeshes[i].position.lerp(target, lerpFactor);
 if (i === 0) {
@@ -645,7 +653,7 @@ let angle = Math.atan2(cnationPlayerDir.x, cnationPlayerDir.y); cnationPlayerMes
 } else {
 let prevPos = cnationPlayerMeshes[i-1].position; let curPos = cnationPlayerMeshes[i].position;
 if (prevPos.distanceTo(curPos) > 0.001) { cnationPlayerMeshes[i].lookAt(prevPos); }
-if (i === cnationPlayerMeshes.length - 1) { cnationPlayerMeshes[i].scale.lerp(new THREE.Vector3(0.5, 0.5, 0.9), 0.2); } else { cnationPlayerMeshes[i].scale.lerp(new THREE.Vector3(1, 1, 1), 0.2); }
+if (i === cnationPlayerMeshes.length - 1) { cnationPlayerMeshes[i].scale.lerp(new THREE.Vector3(0.5, 0.5, 0.9), scaleLerp); } else { cnationPlayerMeshes[i].scale.lerp(new THREE.Vector3(1, 1, 1), scaleLerp); }
 }
 }
 cnationEnemies.forEach(e => {
@@ -656,7 +664,7 @@ let angle = Math.atan2(e.dir.x, e.dir.y); e.meshes[i].rotation.y = angle; e.mesh
 } else {
 let prevPos = e.meshes[i-1].position; let curPos = e.meshes[i].position;
 if (prevPos.distanceTo(curPos) > 0.001) { e.meshes[i].lookAt(prevPos); }
-if (i === e.meshes.length - 1) { e.meshes[i].scale.lerp(new THREE.Vector3(0.5, 0.5, 0.9), 0.2); } else { e.meshes[i].scale.lerp(new THREE.Vector3(1, 1, 1), 0.2); }
+if (i === e.meshes.length - 1) { e.meshes[i].scale.lerp(new THREE.Vector3(0.5, 0.5, 0.9), scaleLerp); } else { e.meshes[i].scale.lerp(new THREE.Vector3(1, 1, 1), scaleLerp); }
 }
 }
 });
