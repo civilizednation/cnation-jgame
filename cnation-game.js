@@ -289,29 +289,6 @@ document.getElementById('cnation-info-screen').style.display = 'none';
 document.getElementById('cnation-start-screen').style.display = 'flex';
 };
 
-function cnationHandleScore(score, levelKey) {
-if (score <= 0) return;
-if (cnationIsKidsMode) return;
-
-let topScores = (window.cnationCachedScores && window.cnationCachedScores[levelKey]) || [];
-let isHighScore = false;
-
-if (topScores.length < 10) {
-isHighScore = true;
-} else {
-const minScore = topScores[topScores.length - 1].score;
-if (score > minScore) isHighScore = true;
-}
-
-if (isHighScore) {
-window.cnationPendingScore = score;
-window.cnationPendingLevel = levelKey;
-window.cnationPendingScoresList = topScores;
-document.getElementById('cnation-prompt-input').value = '';
-document.getElementById('cnation-prompt-screen').style.display = 'flex';
-}
-}
-
 window.cnationCancelName = function() {
 document.getElementById('cnation-prompt-screen').style.display = 'none';
 };
@@ -336,7 +313,6 @@ levelSpan.innerText = "하"; levelSpan.style.color = "#000000";
 if (cnationIsKidsMode) {
 cnationBaseInterval = baseIntervalRaw * 3;
 cnationMaxTime = maxTimeRaw * 3;
-// 어린이 모드: "하"일 때 0마리, "중"일 때 1마리, "상"일 때 2마리
 if (cnationGameStage === 0) cnationMaxEnemies = 0;
 else if (cnationGameStage === 1) cnationMaxEnemies = 1;
 else cnationMaxEnemies = 2;
@@ -346,12 +322,10 @@ cnationMaxTime = maxTimeRaw;
 cnationMaxEnemies = targetMaxEnemies;
 }
 
-// 초과된 방해 지렁이 제거
 while(cnationEnemies.length > cnationMaxEnemies) {
 let removed = cnationEnemies.pop();
 removed.meshes.forEach(m => cnationScene.remove(m));
 }
-// 부족한 방해 지렁이 추가
 while(cnationEnemies.length < cnationMaxEnemies) {
 cnationSpawnEnemy();
 }
@@ -529,7 +503,8 @@ document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
-if (window.cnationHandleScore) {
+// 어린이 모드가 아닐 때만 랭킹 체크 함수 호출
+if (!cnationIsKidsMode && window.cnationHandleScore) {
   window.cnationHandleScore(cnationScore, levelKey);
 }
 }
