@@ -247,6 +247,9 @@ let levelSel = document.getElementById('cnation-level-select');
 let levelKey = levelSel.value;
 let levelText = levelSel.options[levelSel.selectedIndex].text;
 
+// word.js 의 cnationWordDB 에서 선택한 레벨의 단어 목록을 가져온다.
+cnationSelectedVocab = (typeof cnationWordDB !== 'undefined' && cnationWordDB[levelKey]) ? cnationWordDB[levelKey] : [];
+
 cnationIsKidsMode = document.getElementById('cnation-kids-mode-checkbox').checked;
 
 // 상단 표시 영역 안전하게 갱신
