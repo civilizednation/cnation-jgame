@@ -78,8 +78,8 @@ osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.expo
 gain.gain.setValueAtTime(targetVolume, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
 osc.start(now); osc.stop(now + 0.15);
 } else if (type === 'wrong') {
-let targetVolume = 0.075; // 죽었을 때 효과음과 동일한 볼륨
-osc.type = 'square'; // 명확하게 들리도록 사각파 사용
+let targetVolume = 0.075;
+osc.type = 'square';
 osc.frequency.setValueAtTime(250, now); 
 osc.frequency.exponentialRampToValueAtTime(100, now + 0.25);
 gain.gain.setValueAtTime(targetVolume, now); 
@@ -423,9 +423,11 @@ let m = cnationCreateEmojiSprite('💖');
 m.position.set(pos.x, 0.5, pos.z); cnationScene.add(m);
 cnationHeartItem = { x: pos.x, z: pos.z, mesh: m };
 } else if (rand < 0.12) {
+if (cnationStarBonusCount <= 0) {
 let m = cnationCreateEmojiSprite('⭐');
 m.position.set(pos.x, 0.5, pos.z); cnationScene.add(m);
 cnationStarItem = { x: pos.x, z: pos.z, mesh: m };
+}
 } else {
 let m = cnationCreateEmojiSprite('💎');
 m.position.set(pos.x, 0.5, pos.z); cnationScene.add(m);
