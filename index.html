@@ -178,24 +178,17 @@ font-size: 18px;
 box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 border: 2px solid #ddd;
 }
-#cnation-health-msg {
-display: none;
+#cnation-event-msg-container {
 position: absolute;
 bottom: 100px;
 width: 100%;
 text-align: center;
 z-index: 25;
 pointer-events: none;
-}
-.cnation-health-span {
-padding: 8px 16px;
-background: rgba(255, 105, 180, 0.95);
-border-radius: 20px;
-font-weight: bold;
-font-size: 18px;
-box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-border: 2px solid #fff;
-color: #fff;
+display: flex;
+flex-direction: column;
+gap: 8px;
+align-items: center;
 }
 .cnation-word-label {
 position: absolute;
@@ -249,12 +242,6 @@ padding: 8px;
 color: #555;
 font-weight: bold;
 }
-#cnation-heart-label {
-background: transparent;
-padding: 0;
-text-shadow: none;
-font-size: 28px;
-}
 </style>
 </head>
 <body>
@@ -297,12 +284,12 @@ font-size: 28px;
 </div>
 <div id="cnation-preview-body1" class="cnation-preview-dot cnation-preview-body" style="z-index:3;"></div>
 <div id="cnation-preview-body2" class="cnation-preview-dot cnation-preview-body" style="z-index:2;"></div>
-<div id="cnation-preview-body3" class="cnation-preview-dot" style="z-index:1; transform: scale(0.65); border-radius: 40% 60% 60% 40%;"></div>
+<div id="cnation-preview-body3" class="cnation-preview-dot" style="z-index:1; width: 16px; height: 16px; margin-left: -6px; border-radius: 40% 60% 60% 40%;"></div>
 </div>
 
 <button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
 <button class="cnation-btn cnation-btn-rank" onclick="cnationShowRanking()">게임 랭킹 확인</button>
-<div id="cnation-version-tag">Version 1.0.8</div>
+<div id="cnation-version-tag">Version 1.1.1</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -330,9 +317,7 @@ font-size: 28px;
 <div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
 </div>
 
-<div id="cnation-health-msg">
-<span class="cnation-health-span">체력 1 회복 💖</span>
-</div>
+<div id="cnation-event-msg-container"></div>
 
 <div id="cnation-feedback-container">
 <span id="cnation-feedback-text"></span>
@@ -343,7 +328,6 @@ font-size: 28px;
 <div id="cnation-label-1" class="cnation-word-label">word2</div>
 <div id="cnation-label-2" class="cnation-word-label">word3</div>
 <div id="cnation-label-3" class="cnation-word-label">word4</div>
-<div id="cnation-heart-label" class="cnation-word-label">❤️</div>
 </div>
 
 <div id="cnation-game-over">
@@ -393,7 +377,9 @@ const cnationMatEnemyBody = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, ro
 const cnationMatEnemyRing = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.6, metalness: 0.1 });
 
 const cnationMatFood = new THREE.MeshStandardMaterial({ color: 0xffd700, roughness: 0.3 });
-const cnationMatHeart = new THREE.MeshStandardMaterial({ color: 0xff3366, roughness: 0.3 });
+const cnationMatHeart = new THREE.MeshStandardMaterial({ color: 0xff3366, roughness: 0.3, metalness: 0.2 });
+const cnationMatIce = new THREE.MeshStandardMaterial({ color: 0x00ffff, transparent: true, opacity: 0.8, roughness: 0.1, metalness: 0.5 });
+const cnationMatStar = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.3, metalness: 0.8, emissive: 0x332200 });
 
 function cnationUpdateWormColors(conf) {
 cnationMatPlayerHead.color.setHex(conf.hHex);
@@ -420,13 +406,8 @@ let cnationAudioCtx;
 function cnationInitAudio() {
 let soundSetting = document.getElementById('cnation-sound-select').value;
 if (soundSetting === 'off') return;
-
-if (!cnationAudioCtx) {
-cnationAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-}
-if (cnationAudioCtx.state === 'suspended') {
-cnationAudioCtx.resume();
-}
+if (!cnationAudioCtx) { cnationAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+if (cnationAudioCtx.state === 'suspended') { cnationAudioCtx.resume(); }
 const osc = cnationAudioCtx.createOscillator();
 const gain = cnationAudioCtx.createGain();
 osc.connect(gain);
@@ -439,17 +420,13 @@ osc.stop(cnationAudioCtx.currentTime + 0.01);
 function cnationPlaySound(type) {
 let soundSetting = document.getElementById('cnation-sound-select').value;
 if (soundSetting === 'off') return;
-
 if (!cnationAudioCtx) return;
-if (cnationAudioCtx.state === 'suspended') {
-cnationAudioCtx.resume();
-}
+if (cnationAudioCtx.state === 'suspended') { cnationAudioCtx.resume(); }
 const osc = cnationAudioCtx.createOscillator();
 const gain = cnationAudioCtx.createGain();
 osc.connect(gain);
 gain.connect(cnationAudioCtx.destination);
 const now = cnationAudioCtx.currentTime;
-
 let targetVolume = 0.075;
 
 if (type === 'correct') {
@@ -458,40 +435,50 @@ osc.frequency.setValueAtTime(523.25, now);
 osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.15);
 gain.gain.setValueAtTime(targetVolume, now);
 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-osc.start(now);
-osc.stop(now + 0.15);
+osc.start(now); osc.stop(now + 0.15);
 } else if (type === 'wrong') {
 osc.type = 'sawtooth';
 osc.frequency.setValueAtTime(180, now);
 osc.frequency.linearRampToValueAtTime(90, now + 0.2);
 gain.gain.setValueAtTime(targetVolume, now);
 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-osc.start(now);
-osc.stop(now + 0.2);
+osc.start(now); osc.stop(now + 0.2);
 } else if (type === 'die') {
 osc.type = 'square';
 osc.frequency.setValueAtTime(300, now);
 osc.frequency.linearRampToValueAtTime(60, now + 0.4);
 gain.gain.setValueAtTime(targetVolume, now);
 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-osc.start(now);
-osc.stop(now + 0.4);
+osc.start(now); osc.stop(now + 0.4);
 } else if (type === 'enemy_die') {
 osc.type = 'triangle';
 osc.frequency.setValueAtTime(150, now);
 osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
 gain.gain.setValueAtTime(0.05, now);
 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-osc.start(now);
-osc.stop(now + 0.1);
+osc.start(now); osc.stop(now + 0.1);
 } else if (type === 'heal') {
 osc.type = 'sine';
 osc.frequency.setValueAtTime(440, now);
 osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
 gain.gain.setValueAtTime(targetVolume, now);
 gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-osc.start(now);
-osc.stop(now + 0.2);
+osc.start(now); osc.stop(now + 0.2);
+} else if (type === 'freeze') {
+osc.type = 'sine';
+osc.frequency.setValueAtTime(800, now);
+osc.frequency.linearRampToValueAtTime(1200, now + 0.3);
+gain.gain.setValueAtTime(targetVolume, now);
+gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+osc.start(now); osc.stop(now + 0.3);
+} else if (type === 'bonus') {
+osc.type = 'square';
+osc.frequency.setValueAtTime(400, now);
+osc.frequency.setValueAtTime(600, now + 0.1);
+osc.frequency.setValueAtTime(800, now + 0.2);
+gain.gain.setValueAtTime(targetVolume, now);
+gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+osc.start(now); osc.stop(now + 0.3);
 }
 }
 
@@ -572,7 +559,11 @@ let cnationLastEnemyTickTime = 0;
 
 let cnationEnemies = [];
 let cnationFoodData = [];
+
 let cnationHeartItem = null;
+let cnationIceItem = null;
+let cnationStarItem = null;
+let cnationEnemiesFrozen = false;
 
 const cnationGeoBody = new THREE.SphereGeometry(0.45, 32, 32);
 const cnationGeoRing = new THREE.TorusGeometry(0.45, 0.08, 12, 24);
@@ -592,30 +583,43 @@ cnationHeartShape.bezierCurveTo( hx - 6, hy + 11, hx - 3, hy + 15.4, hx + 5, hy 
 cnationHeartShape.bezierCurveTo( hx + 12, hy + 15.4, hx + 16, hy + 11, hx + 16, hy + 7 );
 cnationHeartShape.bezierCurveTo( hx + 16, hy + 7, hx + 16, hy, hx + 10, hy );
 cnationHeartShape.bezierCurveTo( hx + 7, hy, hx + 5, hy + 5, hx + 5, hy + 5 );
-const cnationExtrudeSettings = { depth: 2, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 1, bevelThickness: 1 };
-const cnationGeoHeart = new THREE.ExtrudeGeometry( cnationHeartShape, cnationExtrudeSettings );
+const cnationHeartExtrude = { depth: 2, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 1, bevelThickness: 1, curveSegments: 12 };
+const cnationGeoHeart = new THREE.ExtrudeGeometry( cnationHeartShape, cnationHeartExtrude );
 cnationGeoHeart.center();
-cnationGeoHeart.scale(0.035, -0.035, 0.035);
+cnationGeoHeart.scale(0.025, -0.025, 0.025);
+
+const cnationGeoIce = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+
+const cnationStarShape = new THREE.Shape();
+const outerRadius = 10, innerRadius = 4, numPoints = 5;
+for(let i = 0; i < numPoints * 2; i++) {
+const r = (i % 2 === 0) ? outerRadius : innerRadius;
+const a = i * Math.PI / numPoints;
+if(i === 0) cnationStarShape.moveTo(r * Math.sin(a), r * Math.cos(a));
+else cnationStarShape.lineTo(r * Math.sin(a), r * Math.cos(a));
+}
+const cnationStarExtrude = { depth: 2, bevelEnabled: true, bevelThickness: 1, bevelSize: 1, bevelSegments: 1, curveSegments: 12 };
+const cnationGeoStar = new THREE.ExtrudeGeometry(cnationStarShape, cnationStarExtrude);
+cnationGeoStar.center();
+cnationGeoStar.scale(0.03, 0.03, 0.03);
+
 
 function cnationCreateHeadMesh(isEnemy) {
 const group = new THREE.Group();
 const head = new THREE.Mesh(cnationGeoBody, isEnemy ? cnationMatEnemyHead : cnationMatPlayerHead);
 group.add(head);
-
 const leftEye = new THREE.Mesh(cnationGeoEye, cnationMatWhite);
 leftEye.position.set(-0.2, 0.2, 0.35);
 const leftPupil = new THREE.Mesh(cnationGeoPupil, cnationMatBlack);
 leftPupil.position.set(0, 0, 0.1);
 leftEye.add(leftPupil);
 group.add(leftEye);
-
 const rightEye = new THREE.Mesh(cnationGeoEye, cnationMatWhite);
 rightEye.position.set(0.2, 0.2, 0.35);
 const rightPupil = new THREE.Mesh(cnationGeoPupil, cnationMatBlack);
 rightPupil.position.set(0, 0, 0.1);
 rightEye.add(rightPupil);
 group.add(rightEye);
-
 return group;
 }
 
@@ -626,6 +630,21 @@ group.add(body);
 const ring = new THREE.Mesh(cnationGeoRing, isEnemy ? cnationMatEnemyRing : cnationMatPlayerRing);
 group.add(ring);
 return group;
+}
+
+function cnationShowEventMsg(text, bgColor) {
+let msg = document.createElement('div');
+msg.style.padding = '8px 16px';
+msg.style.background = bgColor;
+msg.style.borderRadius = '20px';
+msg.style.fontWeight = 'bold';
+msg.style.fontSize = '18px';
+msg.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
+msg.style.border = '2px solid #fff';
+msg.style.color = '#fff';
+msg.innerHTML = text;
+document.getElementById('cnation-event-msg-container').appendChild(msg);
+setTimeout(() => { msg.remove(); }, 2000);
 }
 
 let cnationPendingScore = 0;
@@ -641,7 +660,6 @@ document.getElementById('cnation-lives-display').innerText = hearts;
 
 window.cnationStartGame = function() {
 cnationInitAudio();
-
 let colorKey = document.getElementById('cnation-color-select').value;
 let conf = cnationColorConfig[colorKey];
 cnationUpdateWormColors(conf);
@@ -661,7 +679,7 @@ document.getElementById('cnation-game-ui').style.display = 'block';
 
 document.getElementById('cnation-feedback-text').style.display = 'none';
 document.getElementById('cnation-feedback-text').innerHTML = '';
-document.getElementById('cnation-health-msg').style.display = 'none';
+document.getElementById('cnation-event-msg-container').innerHTML = '';
 
 cnationAdjustCamera();
 cnationResetWorld();
@@ -677,7 +695,6 @@ cnationGameState = 'TITLE';
 for(let i=0; i<4; i++) {
 document.getElementById('cnation-label-'+i).style.display = 'none';
 }
-document.getElementById('cnation-heart-label').style.display = 'none';
 };
 
 window.cnationShowRanking = async function() {
@@ -836,11 +853,14 @@ cnationPlayerMeshes.forEach(m => cnationScene.remove(m));
 cnationEnemies.forEach(e => e.meshes.forEach(m => cnationScene.remove(m)));
 cnationFoodData.forEach(f => cnationScene.remove(f.mesh));
 
-if(cnationHeartItem) {
-cnationScene.remove(cnationHeartItem.mesh);
-cnationHeartItem = null;
-}
-document.getElementById('cnation-heart-label').style.display = 'none';
+if(cnationHeartItem) { cnationScene.remove(cnationHeartItem.mesh); cnationHeartItem = null; }
+if(cnationIceItem) { cnationScene.remove(cnationIceItem.mesh); cnationIceItem = null; }
+if(cnationStarItem) { cnationScene.remove(cnationStarItem.mesh); cnationStarItem = null; }
+
+cnationMatEnemyHead.transparent = false; cnationMatEnemyHead.opacity = 1.0;
+cnationMatEnemyBody.transparent = false; cnationMatEnemyBody.opacity = 1.0;
+cnationMatEnemyRing.transparent = false; cnationMatEnemyRing.opacity = 1.0;
+cnationEnemiesFrozen = false;
 
 cnationPlayerLogic = [];
 cnationPlayerMeshes = [];
@@ -887,11 +907,14 @@ function cnationSpawnQuestion() {
 cnationFoodData.forEach(f => cnationScene.remove(f.mesh));
 cnationFoodData = [];
 
-if(cnationHeartItem) {
-cnationScene.remove(cnationHeartItem.mesh);
-cnationHeartItem = null;
-}
-document.getElementById('cnation-heart-label').style.display = 'none';
+if(cnationHeartItem) { cnationScene.remove(cnationHeartItem.mesh); cnationHeartItem = null; }
+if(cnationIceItem) { cnationScene.remove(cnationIceItem.mesh); cnationIceItem = null; }
+if(cnationStarItem) { cnationScene.remove(cnationStarItem.mesh); cnationStarItem = null; }
+
+cnationMatEnemyHead.transparent = false; cnationMatEnemyHead.opacity = 1.0;
+cnationMatEnemyBody.transparent = false; cnationMatEnemyBody.opacity = 1.0;
+cnationMatEnemyRing.transparent = false; cnationMatEnemyRing.opacity = 1.0;
+cnationEnemiesFrozen = false;
 
 cnationTimeLeft = cnationMaxTime;
 document.getElementById('cnation-timer-fill').style.background = '#00ff00';
@@ -927,33 +950,53 @@ lbl.innerText = choices[i].en;
 lbl.style.display = 'block';
 }
 
-if(Math.random() < 0.50) {
-let valid = false;
-let rx, rz;
-let attempts = 0;
+function getValidPos() {
+let valid = false, rx, rz, attempts = 0;
 while(!valid && attempts < 200) {
 rx = Math.floor(Math.random() * (cnationBounds.x * 2 - 4)) - (cnationBounds.x - 2);
 rz = Math.floor(Math.random() * (cnationBounds.y * 2 - 4)) - (cnationBounds.y - 2);
 valid = true;
 for(let p of cnationPlayerLogic) if(p.x === rx && p.z === rz) valid = false;
 for(let f of cnationFoodData) if(f.x === rx && f.z === rz) valid = false;
+if(cnationHeartItem && cnationHeartItem.x === rx && cnationHeartItem.z === rz) valid = false;
+if(cnationIceItem && cnationIceItem.x === rx && cnationIceItem.z === rz) valid = false;
+if(cnationStarItem && cnationStarItem.x === rx && cnationStarItem.z === rz) valid = false;
 attempts++;
 }
+return valid ? {x: rx, z: rz} : null;
+}
 
-if(valid) {
+if(Math.random() < 0.50) {
+let pos = getValidPos();
+if(pos) {
 let m = new THREE.Mesh(cnationGeoHeart, cnationMatHeart);
-m.position.set(rx, 0.5, rz);
+m.position.set(pos.x, 0.5, pos.z);
 cnationScene.add(m);
-cnationHeartItem = { x: rx, z: rz, mesh: m };
-document.getElementById('cnation-heart-label').style.display = 'block';
+cnationHeartItem = { x: pos.x, z: pos.z, mesh: m };
 }
 }
-
+if(Math.random() < 0.50) {
+let pos = getValidPos();
+if(pos) {
+let m = new THREE.Mesh(cnationGeoIce, cnationMatIce);
+m.position.set(pos.x, 0.5, pos.z);
+cnationScene.add(m);
+cnationIceItem = { x: pos.x, z: pos.z, mesh: m };
+}
+}
+if(Math.random() < 0.50) {
+let pos = getValidPos();
+if(pos) {
+let m = new THREE.Mesh(cnationGeoStar, cnationMatStar);
+m.position.set(pos.x, 0.5, pos.z);
+cnationScene.add(m);
+cnationStarItem = { x: pos.x, z: pos.z, mesh: m };
+}
+}
 }
 
 function cnationPenalty() {
 cnationPlaySound('wrong');
-
 let fb = document.getElementById('cnation-feedback-text');
 fb.innerHTML = `<span style="color:#8B0000;">틀렸습니다.</span> <span style="color:#008000;">정답은 ${cnationCurrentQuestion.en}(${cnationCurrentQuestion.ko})</span>`;
 fb.style.display = 'inline-block';
@@ -981,7 +1024,6 @@ cnationSpawnQuestion();
 
 function cnationUpdateLabels() {
 let baseFontSize = Math.min(40, Math.max(16, window.innerWidth * 0.04));
-
 for(let i=0; i<4; i++) {
 let f = cnationFoodData[i];
 if(!f) continue;
@@ -991,7 +1033,6 @@ let x = (pos.x * 0.5 + 0.5) * window.innerWidth;
 let y = (pos.y * -0.5 + 0.5) * window.innerHeight;
 let lbl = document.getElementById('cnation-label-' + i);
 lbl.style.fontSize = baseFontSize + 'px';
-
 let offsetX = 0;
 let offsetY = -(baseFontSize * 2); 
 if(f.z < -cnationBounds.y + 2) offsetY = (baseFontSize * 2); 
@@ -999,16 +1040,6 @@ if(f.x < -cnationBounds.x + 2) { offsetX = (baseFontSize * 2.5); offsetY = 0; }
 else if(f.x > cnationBounds.x - 2) { offsetX = -(baseFontSize * 2.5); offsetY = 0; } 
 lbl.style.left = (x + offsetX) + 'px';
 lbl.style.top = (y + offsetY) + 'px';
-}
-
-if(cnationHeartItem) {
-let pos = cnationHeartItem.mesh.position.clone();
-pos.project(cnationCamera);
-let x = (pos.x * 0.5 + 0.5) * window.innerWidth;
-let y = (pos.y * -0.5 + 0.5) * window.innerHeight;
-let lbl = document.getElementById('cnation-heart-label');
-lbl.style.left = x + 'px';
-lbl.style.top = (y - 15) + 'px';
 }
 }
 
@@ -1055,7 +1086,6 @@ document.getElementById('cnation-missed-list').innerHTML = missedHtml;
 
 document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
-document.getElementById('cnation-heart-label').style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
 setTimeout(() => {
@@ -1074,25 +1104,43 @@ cnationGameOver(); return;
 for(let i=1; i<cnationPlayerLogic.length; i++) {
 if(px === cnationPlayerLogic[i].x && pz === cnationPlayerLogic[i].z) { cnationGameOver(); return; }
 }
+
+if (!cnationEnemiesFrozen) {
 for(let i=0; i<cnationEnemies.length; i++) {
 for(let j=0; j<cnationEnemies[i].logic.length; j++) {
 if(px === cnationEnemies[i].logic[j].x && pz === cnationEnemies[i].logic[j].z) { cnationGameOver(); return; }
+}
 }
 }
 
 if(cnationHeartItem && px === cnationHeartItem.x && pz === cnationHeartItem.z) {
 cnationPlaySound('heal');
 cnationScene.remove(cnationHeartItem.mesh);
-document.getElementById('cnation-heart-label').style.display = 'none';
 cnationHeartItem = null;
-
 if(cnationLives < cnationMaxLives) {
 cnationLives++;
 cnationUpdateLivesUI();
-let hMsg = document.getElementById('cnation-health-msg');
-hMsg.style.display = 'block';
-setTimeout(() => { hMsg.style.display = 'none'; }, 2000);
+cnationShowEventMsg('체력 1 회복 💖', 'rgba(255, 105, 180, 0.95)');
 }
+}
+
+if(cnationIceItem && px === cnationIceItem.x && pz === cnationIceItem.z) {
+cnationPlaySound('freeze');
+cnationScene.remove(cnationIceItem.mesh);
+cnationIceItem = null;
+cnationEnemiesFrozen = true;
+cnationMatEnemyHead.transparent = true; cnationMatEnemyHead.opacity = 0.3;
+cnationMatEnemyBody.transparent = true; cnationMatEnemyBody.opacity = 0.3;
+cnationMatEnemyRing.transparent = true; cnationMatEnemyRing.opacity = 0.3;
+}
+
+if(cnationStarItem && px === cnationStarItem.x && pz === cnationStarItem.z) {
+cnationPlaySound('bonus');
+cnationScene.remove(cnationStarItem.mesh);
+cnationStarItem = null;
+cnationScore += 30;
+document.getElementById('cnation-score-val').innerText = cnationScore;
+cnationShowEventMsg('보너스 점수 30점 획득 ⭐', 'rgba(241, 196, 15, 0.95)');
 }
 
 let pAteIndex = -1;
@@ -1135,6 +1183,8 @@ cnationPlayerLogic[0].x = px; cnationPlayerLogic[0].z = pz;
 }
 
 function cnationEnemyTick() {
+if(cnationEnemiesFrozen) return;
+
 let deadEnemies = [];
 let playedDeathSound = false;
 
@@ -1173,10 +1223,7 @@ if(e.nextX === cnationEnemies[i].logic[j].x && e.nextZ === cnationEnemies[i].log
 }
 if(hit) {
 deadEnemies.push(idx);
-if(!playedDeathSound) {
-cnationPlaySound('enemy_die');
-playedDeathSound = true;
-}
+if(!playedDeathSound) { cnationPlaySound('enemy_die'); playedDeathSound = true; }
 } else {
 for (let i = e.logic.length - 1; i > 0; i--) { e.logic[i].x = e.logic[i - 1].x; e.logic[i].z = e.logic[i - 1].z; }
 e.logic[0].x = e.nextX; e.logic[0].z = e.nextZ;
@@ -1203,13 +1250,11 @@ fill.style.width = (cnationTimeLeft / cnationMaxTime * 100) + '%';
 if(cnationTimeLeft < 4) fill.style.background = '#ff0000';
 if(cnationTimeLeft <= 0) cnationPenalty();
 
-cnationFoodData.forEach(f => {
-f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03;
-});
+cnationFoodData.forEach(f => { f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03; });
 
-if(cnationHeartItem) {
-cnationHeartItem.mesh.rotation.y += 0.05;
-}
+if(cnationHeartItem) { cnationHeartItem.mesh.rotation.y += 0.05; }
+if(cnationIceItem) { cnationIceItem.mesh.rotation.x += 0.03; cnationIceItem.mesh.rotation.y += 0.05; }
+if(cnationStarItem) { cnationStarItem.mesh.rotation.y += 0.06; cnationStarItem.mesh.rotation.z += 0.02; }
 
 if (time - cnationLastTickTime > cnationBaseInterval) {
 cnationPlayerTick();
@@ -1233,9 +1278,7 @@ cnationPlayerMeshes[i].scale.set(1, 1, 1);
 } else {
 let prevPos = cnationPlayerMeshes[i-1].position;
 let curPos = cnationPlayerMeshes[i].position;
-if (prevPos.distanceTo(curPos) > 0.001) {
-cnationPlayerMeshes[i].lookAt(prevPos);
-}
+if (prevPos.distanceTo(curPos) > 0.001) { cnationPlayerMeshes[i].lookAt(prevPos); }
 if (i === cnationPlayerMeshes.length - 1) {
 cnationPlayerMeshes[i].scale.lerp(new THREE.Vector3(0.5, 0.5, 0.9), 0.2);
 } else {
@@ -1255,9 +1298,7 @@ e.meshes[i].scale.set(1, 1, 1);
 } else {
 let prevPos = e.meshes[i-1].position;
 let curPos = e.meshes[i].position;
-if (prevPos.distanceTo(curPos) > 0.001) {
-e.meshes[i].lookAt(prevPos);
-}
+if (prevPos.distanceTo(curPos) > 0.001) { e.meshes[i].lookAt(prevPos); }
 if (i === e.meshes.length - 1) {
 e.meshes[i].scale.lerp(new THREE.Vector3(0.5, 0.5, 0.9), 0.2);
 } else {
