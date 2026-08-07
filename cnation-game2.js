@@ -117,17 +117,14 @@ cnationScene.background = new THREE.Color(0x34495e);
 const cnationBounds = { x: 11, y: 11 };
 const cnationCamera = new THREE.OrthographicCamera(-14, 14, 14, -14, 0.1, 1000);
 
-let cnationIsPCMode = false;
+const cnationRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+// left-panel 내부의 canvas-wrapper에만 렌더링 요소를 삽입합니다.
+const canvasWrapper = document.getElementById('canvas-wrapper');
+canvasWrapper.appendChild(cnationRenderer.domElement);
 
 function cnationAdjustCamera() {
-let w = window.innerWidth;
-let h = window.innerHeight;
-
-if (typeof cnationIsPCMode !== 'undefined' && cnationIsPCMode) {
-let minSize = Math.min(w, h);
-w = minSize;
-h = minSize;
-}
+let w = canvasWrapper.clientWidth;
+let h = canvasWrapper.clientHeight;
 
 let aspect = w / h;
 let viewSize = 14;
@@ -144,67 +141,8 @@ cnationCamera.position.set(0, 20, 0);
 cnationCamera.up.set(0, 0, -1);
 cnationCamera.lookAt(0, 0, 0);
 
-if (typeof cnationRenderer !== 'undefined') {
 cnationRenderer.setSize(w, h);
-if (typeof cnationIsPCMode !== 'undefined' && cnationIsPCMode) {
-cnationRenderer.domElement.style.position = "absolute";
-cnationRenderer.domElement.style.left = "50%";
-cnationRenderer.domElement.style.top = "50%";
-cnationRenderer.domElement.style.transform = "translate(-50%, -50%)";
-
-let ui = document.getElementById('cnation-game-ui');
-if(ui) {
-ui.style.width = w + 'px';
-ui.style.left = '50%';
-ui.style.transform = 'translateX(-50%)';
-ui.style.top = ((window.innerHeight - h) / 2) + 'px';
 }
-let fb = document.getElementById('cnation-feedback-container');
-if(fb) {
-fb.style.width = w + 'px';
-fb.style.left = '50%';
-fb.style.transform = 'translateX(-50%)';
-fb.style.bottom = ((window.innerHeight - h) / 2 + 40) + 'px';
-}
-let ev = document.getElementById('cnation-event-msg-container');
-if(ev) {
-ev.style.width = w + 'px';
-ev.style.left = '50%';
-ev.style.transform = 'translateX(-50%)';
-ev.style.bottom = ((window.innerHeight - h) / 2 + 100) + 'px';
-}
-} else {
-cnationRenderer.domElement.style.position = "static";
-cnationRenderer.domElement.style.transform = "none";
-
-let ui = document.getElementById('cnation-game-ui');
-if(ui) {
-ui.style.width = '100%';
-ui.style.left = '0';
-ui.style.transform = 'none';
-ui.style.top = '0px';
-}
-let fb = document.getElementById('cnation-feedback-container');
-if(fb) {
-fb.style.width = '100%';
-fb.style.left = '0';
-fb.style.transform = 'none';
-fb.style.bottom = '40px';
-}
-let ev = document.getElementById('cnation-event-msg-container');
-if(ev) {
-ev.style.width = '100%';
-ev.style.left = '0';
-ev.style.transform = 'none';
-ev.style.bottom = '100px';
-}
-}
-}
-}
-
-const cnationRenderer = new THREE.WebGLRenderer({ antialias: true });
-cnationRenderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(cnationRenderer.domElement);
 
 const cnationAmbientLight = new THREE.AmbientLight(0xffffff, 0.8);
 cnationScene.add(cnationAmbientLight);
@@ -294,8 +232,8 @@ return group;
 function cnationShowEventMsg(text, bgColor) {
 let msg = document.createElement('div');
 msg.style.padding = '8px 16px'; msg.style.background = bgColor;
-msg.style.borderRadius = '20px'; msg.style.fontWeight = 'bold';
-msg.style.fontSize = '18px'; msg.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
+msg.style.borderRadius = '15px'; msg.style.fontWeight = 'bold';
+msg.style.fontSize = '16px'; msg.style.boxShadow = '0 4px 10px rgba(0,0,0,0.3)';
 msg.style.border = '2px solid #fff'; msg.style.color = '#fff';
 msg.innerHTML = text;
 document.getElementById('cnation-event-msg-container').appendChild(msg);
@@ -311,6 +249,14 @@ for(let i=cnationLives; i<cnationMaxLives; i++) hearts += "🤍";
 document.getElementById('cnation-lives-display').innerText = hearts;
 }
 
+// 화면 전환 함수 간소화
+function showScreen(screenId) {
+const screens = ['cnation-start-screen', 'cnation-game-ui', 'cnation-game-over', 'cnation-prompt-screen', 'cnation-ranking-screen', 'cnation-info-screen'];
+screens.forEach(id => {
+    document.getElementById(id).style.display = (id === screenId) ? 'flex' : 'none';
+});
+}
+
 window.cnationStartGame = function() {
 cnationInitAudio();
 let colorKey = document.getElementById('cnation-color-select').value;
@@ -321,18 +267,11 @@ let levelKey = levelSel.value;
 let levelText = levelSel.options[levelSel.selectedIndex].text;
 
 if (typeof cnationWordDB === 'undefined' || !cnationWordDB[levelKey]) {
-alert("단어 데이터를 불러올 수 없습니다. word.js 파일 연결 상태나 내용을 확인해주세요.");
+alert("단어 데이터를 불러올 수 없습니다. word.js 파일 상태를 확인해주세요.");
 return;
 }
 
 cnationIsKidsMode = document.getElementById('cnation-kids-mode-checkbox').checked;
-cnationIsPCMode = document.getElementById('cnation-pc-mode-checkbox').checked;
-
-if (cnationIsPCMode) {
-document.body.classList.add('pc-mode-active');
-} else {
-document.body.classList.remove('pc-mode-active');
-}
 
 let vocabDisplay = document.getElementById('cnation-vocab-display');
 if (cnationIsKidsMode) {
@@ -345,14 +284,8 @@ vocabDisplay.innerText = levelText;
 
 cnationSelectedVocab = cnationWordDB[levelKey];
 
-document.getElementById('cnation-start-screen').style.display = 'none';
-document.getElementById('cnation-game-over').style.display = 'none';
-document.getElementById('cnation-ranking-screen').style.display = 'none';
-document.getElementById('cnation-info-screen').style.display = 'none';
-document.getElementById('cnation-prompt-screen').style.display = 'none';
-document.getElementById('cnation-game-ui').style.display = 'block';
-document.getElementById('cnation-feedback-text').style.display = 'none';
-document.getElementById('cnation-feedback-text').innerHTML = '';
+showScreen('cnation-game-ui');
+document.getElementById('cnation-feedback-text').innerHTML = '게임을 시작합니다! 화이팅!';
 document.getElementById('cnation-event-msg-container').innerHTML = '';
 
 cnationAdjustCamera(); cnationResetWorld();
@@ -360,32 +293,16 @@ cnationGameState = 'PLAYING'; cnationLastFrameTime = performance.now();
 };
 
 window.cnationGoToTitle = function() {
-document.getElementById('cnation-game-over').style.display = 'none';
-document.getElementById('cnation-game-ui').style.display = 'none';
-document.getElementById('cnation-start-screen').style.display = 'flex';
+showScreen('cnation-start-screen');
 cnationGameState = 'TITLE';
 if (window.cnationPreloadRankings) window.cnationPreloadRankings();
 for(let i=0; i<4; i++) { document.getElementById('cnation-label-'+i).style.display = 'none'; }
 };
 
-window.cnationCloseRanking = function() {
-document.getElementById('cnation-ranking-screen').style.display = 'none';
-document.getElementById('cnation-start-screen').style.display = 'flex';
-};
-
-window.cnationShowInfo = function() {
-document.getElementById('cnation-start-screen').style.display = 'none';
-document.getElementById('cnation-info-screen').style.display = 'flex';
-};
-
-window.cnationCloseInfo = function() {
-document.getElementById('cnation-info-screen').style.display = 'none';
-document.getElementById('cnation-start-screen').style.display = 'flex';
-};
-
-window.cnationCancelName = function() {
-document.getElementById('cnation-prompt-screen').style.display = 'none';
-};
+window.cnationCloseRanking = function() { showScreen('cnation-start-screen'); };
+window.cnationShowInfo = function() { showScreen('cnation-info-screen'); };
+window.cnationCloseInfo = function() { showScreen('cnation-start-screen'); };
+window.cnationCancelName = function() { showScreen('cnation-start-screen'); };
 
 function cnationUpdateStage() {
 let levelSpan = document.getElementById('cnation-game-level');
@@ -395,13 +312,13 @@ let targetMaxEnemies = 2;
 
 if(cnationCorrectAnswers >= 20) {
 cnationGameStage = 2; baseIntervalRaw = 110; targetMaxEnemies = 4; maxTimeRaw = 15;
-levelSpan.innerText = "상"; levelSpan.style.color = "#ff0000";
+levelSpan.innerText = "상"; levelSpan.style.color = "#e74c3c";
 } else if(cnationCorrectAnswers >= 10) {
 cnationGameStage = 1; baseIntervalRaw = 154; targetMaxEnemies = 3; maxTimeRaw = 18;
-levelSpan.innerText = "중"; levelSpan.style.color = "#0000ff";
+levelSpan.innerText = "중"; levelSpan.style.color = "#3498db";
 } else {
 cnationGameStage = 0; baseIntervalRaw = 208; targetMaxEnemies = 2; maxTimeRaw = 20;
-levelSpan.innerText = "하"; levelSpan.style.color = "#000000";
+levelSpan.innerText = "하"; levelSpan.style.color = "#f1c40f";
 }
 
 if (cnationIsKidsMode) {
@@ -544,8 +461,8 @@ cnationIceItem = { x: pos.x, z: pos.z, mesh: m };
 function cnationPenalty() {
 cnationPlaySound('wrong');
 let fb = document.getElementById('cnation-feedback-text');
-fb.innerHTML = `<span style="color:#8B0000;">틀렸습니다.</span> <span style="color:#008000;">정답은 ${cnationCurrentQuestion.en}(${cnationCurrentQuestion.ko})</span>`;
-fb.style.display = 'inline-block';
+fb.innerHTML = `<span style="color:#e74c3c;">틀렸습니다.</span> <br> 정답: <span style="color:#3498db;">${cnationCurrentQuestion.en}</span>`;
+
 cnationMissedWords.push(cnationCurrentQuestion);
 cnationScore -= 5; if(cnationScore < 0) cnationScore = 0;
 document.getElementById('cnation-score-val').innerText = cnationScore;
@@ -555,28 +472,23 @@ if(cnationLives <= 0 || cnationPlayerLogic.length === 0) { cnationGameOver(); } 
 }
 
 function cnationUpdateLabels() {
-let w = window.innerWidth;
-let h = window.innerHeight;
-let offsetX_canvas = 0;
-let offsetY_canvas = 0;
+let w = canvasWrapper.clientWidth;
+let h = canvasWrapper.clientHeight;
 
-if (typeof cnationIsPCMode !== 'undefined' && cnationIsPCMode) {
-let minSize = Math.min(w, h);
-offsetX_canvas = (w - minSize) / 2;
-offsetY_canvas = (h - minSize) / 2;
-w = minSize;
-h = minSize;
-}
-
-let baseFontSize = Math.min(40, Math.max(16, w * 0.04));
+let baseFontSize = Math.min(32, Math.max(14, w * 0.035));
 let count = cnationIsKidsMode ? 3 : 4;
+
 for(let i=0; i<count; i++) {
 let f = cnationFoodData[i]; if(!f) continue;
 let pos = f.mesh.position.clone(); pos.project(cnationCamera);
-let x = (pos.x * 0.5 + 0.5) * w + offsetX_canvas; 
-let y = (pos.y * -0.5 + 0.5) * h + offsetY_canvas;
-let lbl = document.getElementById('cnation-label-' + i); lbl.style.fontSize = baseFontSize + 'px';
-let offsetX = 0; let offsetY = -(baseFontSize * 1.5); 
+
+// 캔버스 내 절대좌표로 변환 (wrapper 영역 기준)
+let x = (pos.x * 0.5 + 0.5) * w; 
+let y = (pos.y * -0.5 + 0.5) * h;
+
+let lbl = document.getElementById('cnation-label-' + i); 
+lbl.style.fontSize = baseFontSize + 'px';
+let offsetY = -(baseFontSize * 1.5); 
 lbl.style.left = x + 'px'; lbl.style.top = (y + offsetY) + 'px';
 }
 }
@@ -589,23 +501,11 @@ else if (e.key === 'ArrowLeft' && cnationPlayerDir.x === 0) cnationPlayerNextDir
 else if (e.key === 'ArrowRight' && cnationPlayerDir.x === 0) cnationPlayerNextDir = { x: 1, y: 0 };
 });
 
-let cnationTouchX = 0; let cnationTouchY = 0;
-window.addEventListener('touchstart', (e) => { cnationTouchX = e.touches[0].screenX; cnationTouchY = e.touches[0].screenY; });
-window.addEventListener('touchend', (e) => {
-if (cnationGameState !== 'PLAYING') return;
-let dx = e.changedTouches[0].screenX - cnationTouchX; let dy = e.changedTouches[0].screenY - cnationTouchY;
-if (Math.abs(dx) > Math.abs(dy)) {
-if (dx > 30 && cnationPlayerDir.x === 0) cnationPlayerNextDir = { x: 1, y: 0 };
-else if (dx < -30 && cnationPlayerDir.x === 0) cnationPlayerNextDir = { x: -1, y: 0 };
-} else {
-if (dy > 30 && cnationPlayerDir.y === 0) cnationPlayerNextDir = { x: 0, y: 1 };
-else if (dy < -30 && cnationPlayerDir.y === 0) cnationPlayerNextDir = { x: 0, y: -1 };
-}
-});
-
+// PC 환경용 마우스 드래그 조작 지원 (캔버스 안에서만 반응)
 let cnationMouseX = 0; let cnationMouseY = 0;
 let cnationIsMouseDown = false;
-window.addEventListener('mousedown', (e) => { 
+
+canvasWrapper.addEventListener('mousedown', (e) => { 
 cnationMouseX = e.clientX; cnationMouseY = e.clientY; 
 cnationIsMouseDown = true;
 });
@@ -626,10 +526,16 @@ function cnationGameOver() {
 cnationPlaySound('die'); cnationGameState = 'GAMEOVER';
 document.getElementById('cnation-final-score').innerText = cnationScore;
 document.getElementById('cnation-final-correct').innerText = cnationCorrectAnswers;
-let missedHtml = "<b>[오답 및 놓친 단어]</b><br><br>";
-if(cnationMissedWords.length === 0) { missedHtml += "틀린 단어가 없습니다!<br>완벽합니다!"; } else { cnationMissedWords.forEach(w => { missedHtml += w.en + " : " + w.ko + "<br>"; }); }
+
+let missedHtml = "";
+if(cnationMissedWords.length === 0) { 
+    missedHtml = "틀린 단어가 없습니다!<br>완벽합니다!"; 
+} else { 
+    cnationMissedWords.forEach(w => { missedHtml += w.en + " : " + w.ko + "<br>"; }); 
+}
 document.getElementById('cnation-missed-list').innerHTML = missedHtml;
-document.getElementById('cnation-game-over').style.display = 'flex';
+
+showScreen('cnation-game-over');
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
@@ -655,11 +561,11 @@ if(cnationLives < cnationMaxLives) { cnationLives++; cnationUpdateLivesUI(); cna
 if(cnationIceItem && px === cnationIceItem.x && pz === cnationIceItem.z) {
 cnationPlaySound('freeze'); cnationScene.remove(cnationIceItem.mesh); cnationIceItem = null; cnationEnemiesFrozen = true;
 cnationMatEnemyHead.transparent = true; cnationMatEnemyHead.opacity = 0.3; cnationMatEnemyBody.transparent = true; cnationMatEnemyBody.opacity = 0.3; cnationMatEnemyRing.transparent = true; cnationMatEnemyRing.opacity = 0.3;
-cnationShowEventMsg('방해꾼 빙결 💎', 'rgba(52, 152, 219, 0.9)');
+cnationShowEventMsg('방해꾼 일시정지 💎', 'rgba(52, 152, 219, 0.9)');
 }
 if(cnationStarItem && px === cnationStarItem.x && pz === cnationStarItem.z) {
 cnationPlaySound('bonus'); cnationScene.remove(cnationStarItem.mesh); cnationStarItem = null; cnationStarBonusCount = 5;
-cnationShowEventMsg('앞으로 5문제 정답 점수 두배 보너스 ⭐', 'rgba(241, 196, 15, 0.95)');
+cnationShowEventMsg('5문제 정답 점수 두배 ⭐', 'rgba(241, 196, 15, 0.95)');
 }
 
 let pAteIndex = -1;
@@ -669,8 +575,8 @@ if(pAteIndex !== -1) {
 if(cnationFoodData[pAteIndex].isCorrect) {
 cnationPlaySound('correct');
 let fb = document.getElementById('cnation-feedback-text');
-fb.innerHTML = `<span style="color:#000000;">${cnationCurrentQuestion.en} (${cnationCurrentQuestion.ko}) 정답 입니다.</span>`;
-fb.style.display = 'inline-block';
+fb.innerHTML = `<span style="color:#2ecc71;">정답 입니다!</span><br>${cnationCurrentQuestion.en} (${cnationCurrentQuestion.ko})`;
+
 if (cnationStarBonusCount > 0) { cnationScore += 20; cnationStarBonusCount--; } else { cnationScore += 10; }
 cnationCorrectAnswers++; document.getElementById('cnation-score-val').innerText = cnationScore;
 willGrow = true; cnationUpdateStage(); cnationSpawnQuestion();
@@ -727,7 +633,7 @@ let dt = (time - cnationLastFrameTime) / 1000; cnationLastFrameTime = time;
 if (cnationGameState === 'PLAYING') {
 cnationTimeLeft -= dt;
 let fill = document.getElementById('cnation-timer-fill'); fill.style.width = (cnationTimeLeft / cnationMaxTime * 100) + '%';
-if(cnationTimeLeft < 4) fill.style.background = '#ff0000';
+if(cnationTimeLeft < 4) fill.style.background = '#e74c3c';
 if(cnationTimeLeft <= 0) cnationPenalty();
 
 cnationFoodData.forEach(f => { f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03; });
