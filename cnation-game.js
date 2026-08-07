@@ -249,12 +249,14 @@ let levelText = levelSel.options[levelSel.selectedIndex].text;
 
 cnationIsKidsMode = document.getElementById('cnation-kids-mode-checkbox').checked;
 
-// 상단 표시 영역 설정 (어린이 모드일 경우 녹색 배경의 '어린이 모드'로 교체)
-let vocabContainer = document.getElementById('cnation-vocab-container');
+// 상단 표시 영역 안전하게 갱신
+let vocabDisplay = document.getElementById('cnation-vocab-display');
 if (cnationIsKidsMode) {
-vocabContainer.innerHTML = '<span class="cnation-kids-badge">어린이 모드</span>';
+vocabDisplay.className = "cnation-kids-badge";
+vocabDisplay.innerText = "어린이 모드";
 } else {
-vocabContainer.innerHTML = `<span id="cnation-vocab-display" class="cnation-highlight-box">${levelText}</span>`;
+vocabDisplay.className = "cnation-highlight-box";
+vocabDisplay.innerText = levelText;
 }
 
 document.getElementById('cnation-start-screen').style.display = 'none';
