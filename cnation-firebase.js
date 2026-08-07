@@ -79,6 +79,28 @@ window.cnationShowRanking();
 } else if (pw !== null) { alert("비밀번호가 틀렸습니다."); }
 };
 
+// 게임 오버 시 점수를 판정하고 신기록일 경우 팝업을 띄우는 함수 추가
+window.cnationHandleScore = function(score, levelKey) {
+if (score <= 0) return;
+let topScores = window.cnationCachedScores[levelKey] || [];
+let isHighScore = false;
+
+if (topScores.length < 10) {
+isHighScore = true;
+} else {
+const minScore = topScores[topScores.length - 1].score;
+if (score > minScore) isHighScore = true;
+}
+
+if (isHighScore) {
+window.cnationPendingScore = score;
+window.cnationPendingLevel = levelKey;
+window.cnationPendingScoresList = topScores;
+document.getElementById('cnation-prompt-input').value = '';
+document.getElementById('cnation-prompt-screen').style.display = 'flex';
+}
+};
+
 window.cnationSubmitName = async function() {
 let name = document.getElementById('cnation-prompt-input').value.trim();
 if(!name) { alert("이름을 입력해주세요!"); return; }
