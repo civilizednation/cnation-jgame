@@ -31,55 +31,68 @@ body {
     background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 5px; 
 }
 
-/* 오른쪽: UI 및 메뉴 패널 */
+/* 오른쪽: UI 및 메뉴 패널 (컴팩트하게 조정) */
 #right-panel { 
-    width: 380px; min-width: 320px; background-color: #2c3e50; 
+    width: 350px; min-width: 320px; background-color: #2c3e50; 
     box-shadow: -5px 0 20px rgba(0,0,0,0.5); z-index: 10; 
     display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
-    padding: 30px 20px; overflow-y: auto; color: #fff; box-sizing: border-box;
+    padding: 15px 20px; overflow-y: auto; color: #fff; box-sizing: border-box;
 }
 
-.panel-screen { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; text-align: center; }
+/* margin: auto 0; 을 주어 화면 높이가 여유로우면 중앙 정렬, 부족하면 위에서부터 스크롤되도록 설정 */
+.panel-screen { display: none; flex-direction: column; align-items: center; justify-content: flex-start; width: 100%; text-align: center; margin: auto 0; }
 
-h1 { color: #f1c40f; font-size: 30px; margin-top: 0; margin-bottom: 20px; text-shadow: 2px 2px #000; }
-.cnation-select-label { color: #bdc3c7; font-weight: bold; font-size: 15px; margin-bottom: 5px; margin-top: 15px; }
-.cnation-select { font-size: 16px; padding: 10px; margin-bottom: 10px; border-radius: 8px; border: 2px solid #7f8c8d; width: 100%; background-color: #fff; color: #000; outline: none; }
-.cnation-checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 15px 0; font-weight: bold; color: #ecf0f1; font-size: 15px; cursor: pointer; }
+h1 { color: #f1c40f; font-size: 26px; margin-top: 0; margin-bottom: 5px; text-shadow: 2px 2px #000; }
+.cnation-select-label { color: #bdc3c7; font-weight: bold; font-size: 14px; margin-bottom: 5px; margin-top: 10px; }
+.cnation-select { font-size: 15px; padding: 8px; margin-bottom: 5px; border-radius: 8px; border: 2px solid #7f8c8d; width: 100%; background-color: #fff; color: #000; outline: none; }
+.cnation-checkbox-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px 0; font-weight: bold; color: #ecf0f1; font-size: 14px; cursor: pointer; }
 
-/* 버튼 스타일 */
-.cnation-btn { background-color: #e74c3c; color: white; border: none; padding: 15px 20px; margin: 10px 0; font-size: 18px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 5px 0 #c0392b; width: 100%; transition: transform 0.1s, box-shadow 0.1s; }
+/* 버튼 스타일 (높이 축소) */
+.cnation-btn { background-color: #e74c3c; color: white; border: none; padding: 12px 20px; margin: 6px 0; font-size: 16px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 5px 0 #c0392b; width: 100%; transition: transform 0.1s, box-shadow 0.1s; }
 .cnation-btn:active { transform: translateY(5px); box-shadow: none; }
 .cnation-btn-rank { background-color: #f39c12; box-shadow: 0 5px 0 #d68910; }
 .cnation-btn-info { background-color: #3498db; box-shadow: 0 5px 0 #2980b9; }
 
-/* 미리보기 */
-#cnation-worm-preview { display: flex; justify-content: center; align-items: center; margin: 20px 0; background: #e0e0e0; padding: 15px; border-radius: 30px; border: 2px solid #7f8c8d; width: 100%; box-sizing: border-box;}
+/* 미리보기 (상하 여백 축소) */
+#cnation-worm-preview { display: flex; justify-content: center; align-items: center; margin: 10px 0; background: #e0e0e0; padding: 10px; border-radius: 20px; border: 2px solid #7f8c8d; width: 100%; box-sizing: border-box;}
 .cnation-preview-dot { width: 24px; height: 24px; border-radius: 50%; box-shadow: inset -4px -4px 8px rgba(0,0,0,0.4), inset 2px 2px 6px rgba(255,255,255,0.6); position: relative; }
 .cnation-preview-body { border-right: 4px solid rgba(0,0,0,0.25); margin-left: -4px; }
 
 /* 게임 진행 UI */
-#cnation-question-text { font-size: 36px; font-weight: bold; color: #ffd700; margin: 15px 0; text-shadow: 2px 2px 0px #000; background: rgba(0,0,0,0.3); padding: 15px 10px; border-radius: 15px; width: 100%; box-sizing: border-box; word-break: keep-all; }
-#cnation-timer-bar { width: 100%; height: 20px; background: #555; border-radius: 10px; margin: 10px 0 20px 0; overflow: hidden; border: 2px solid #222; }
+#cnation-question-text { font-size: 32px; font-weight: bold; color: #ffd700; margin: 10px 0; text-shadow: 2px 2px 0px #000; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; width: 100%; box-sizing: border-box; word-break: keep-all; }
+#cnation-timer-bar { width: 100%; height: 16px; background: #555; border-radius: 8px; margin: 10px 0 15px 0; overflow: hidden; border: 2px solid #222; }
 #cnation-timer-fill { width: 100%; height: 100%; background: #00ff00; transition: width 0.1s linear, background 0.3s; }
-.stats-box { background: rgba(255,255,255,0.1); border-radius: 15px; padding: 15px; width: 100%; margin-bottom: 15px; box-sizing: border-box; }
-.stats-row { display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; margin: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+.stats-box { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; width: 100%; margin-bottom: 10px; box-sizing: border-box; }
+.stats-row { display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; margin: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px; }
 .stats-row:last-child { border-bottom: none; padding-bottom: 0; }
-#cnation-feedback-text { display: block; padding: 15px; background: #fff; border-radius: 12px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: #000; min-height: 25px; margin-bottom: 15px; width: 100%; box-sizing: border-box; line-height: 1.4; }
+#cnation-feedback-text { display: block; padding: 12px; background: #fff; border-radius: 10px; font-weight: bold; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: #000; min-height: 25px; margin-bottom: 10px; width: 100%; box-sizing: border-box; line-height: 1.4; }
 #cnation-event-msg-container { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; }
-.cnation-highlight-box { display: inline-block; padding: 4px 12px; background-color: rgba(255, 255, 255, 0.9); border-radius: 8px; font-size: 18px; font-weight: 900; color: #000000; }
-.cnation-kids-badge { display: inline-block; padding: 4px 12px; background-color: #27ae60; border-radius: 8px; font-size: 18px; font-weight: 900; color: #ffffff; }
+.cnation-highlight-box { display: inline-block; padding: 4px 10px; background-color: rgba(255, 255, 255, 0.9); border-radius: 8px; font-size: 16px; font-weight: 900; color: #000000; }
+.cnation-kids-badge { display: inline-block; padding: 4px 10px; background-color: #27ae60; border-radius: 8px; font-size: 16px; font-weight: 900; color: #ffffff; }
 
 /* 랭킹/설명서 테이블 및 목록 */
-.ranking-table { width: 100%; text-align: center; border-collapse: collapse; margin-top: 10px; font-size: 16px; background:#fff; color:#000; border-radius: 10px; overflow: hidden;}
-.ranking-table th { border-bottom: 2px solid #ccc; padding: 10px; color: #333; background: #eee;}
-.ranking-table td { border-bottom: 1px solid #eee; padding: 10px; font-weight: bold; }
-.cnation-info-section { background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin-bottom: 15px; text-align: left; line-height: 1.6; font-size:14px; }
-.cnation-info-item { display: flex; align-items: center; background: #fff; color: #000; padding: 10px; border-radius: 10px; margin-bottom: 10px; text-align: left; font-size:14px; }
+.ranking-table { width: 100%; text-align: center; border-collapse: collapse; margin-top: 10px; font-size: 14px; background:#fff; color:#000; border-radius: 8px; overflow: hidden;}
+.ranking-table th { border-bottom: 2px solid #ccc; padding: 8px; color: #333; background: #eee;}
+.ranking-table td { border-bottom: 1px solid #eee; padding: 8px; font-weight: bold; }
+.cnation-info-section { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; margin-bottom: 12px; text-align: left; line-height: 1.5; font-size:13px; }
+.cnation-info-item { display: flex; align-items: center; background: #fff; color: #000; padding: 8px; border-radius: 8px; margin-bottom: 8px; text-align: left; font-size:13px; }
+
+/* 모바일 접속 차단 안내창 */
+#cnation-rotate-warning { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #2c3e50; color: #ffffff; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; text-align: center; font-size: 20px; font-weight: bold; line-height: 1.6; }
+@media (max-width: 768px) and (orientation: portrait) {
+    #cnation-rotate-warning { display: flex; }
+}
 </style>
 </head>
 <body>
 
-<!-- 게임 캔버스가 배치될 영역 -->
+<div id="cnation-rotate-warning">
+    <div style="font-size: 60px; margin-bottom: 20px;">💻</div>
+    <span style="color:#f1c40f; font-size: 24px; margin-bottom:10px;">PC 전용 웹 게임입니다</span>
+    원활한 플레이를 위해<br>가로 모드 또는 PC를 이용해 주세요!
+</div>
+
+<!-- 게임 캔바스 영역 -->
 <div id="left-panel">
     <div id="canvas-wrapper">
         <div id="cnation-labels-container">
@@ -91,12 +104,13 @@ h1 { color: #f1c40f; font-size: 30px; margin-top: 0; margin-bottom: 20px; text-s
     </div>
 </div>
 
-<!-- UI, 메뉴가 배치될 오른쪽 사이드바 패널 -->
+<!-- 오른쪽 UI 패널 -->
 <div id="right-panel">
 
     <!-- 1. 타이틀 화면 -->
     <div id="cnation-start-screen" class="panel-screen" style="display: flex;">
-        <h1>cnation 영어단어<br>지렁이 게임<br><span style="font-size:16px; color:#bdc3c7;">(PC / 노트북 전용)</span></h1>
+        <h1>cnation 영어단어<br>지렁이 게임</h1>
+        <div style="font-size:14px; color:#bdc3c7; margin-bottom: 10px;">(PC / 노트북 전용)</div>
         
         <p class="cnation-select-label">영어 단어 수준</p>
         <select id="cnation-level-select" class="cnation-select">
@@ -141,11 +155,10 @@ h1 { color: #f1c40f; font-size: 30px; margin-top: 0; margin-bottom: 20px; text-s
             <button class="cnation-btn cnation-btn-rank" onclick="cnationShowRanking()">랭킹 확인</button>
             <button class="cnation-btn cnation-btn-info" onclick="cnationShowInfo()">게임 설명</button>
         </div>
-        <div id="cnation-version-tag" style="margin-top: 15px; color:#7f8c8d; font-size:12px;">Version 2.0.0 (PC)</div>
     </div>
 
     <!-- 2. 게임 진행 UI 화면 -->
-    <div id="cnation-game-ui" class="panel-screen" style="display: none; justify-content: flex-start;">
+    <div id="cnation-game-ui" class="panel-screen" style="display: none;">
         <div id="cnation-vocab-container" style="margin-top:10px; margin-bottom: 5px;">
             <span id="cnation-vocab-display" class="cnation-highlight-box">유치원생</span>
         </div>
@@ -156,7 +169,7 @@ h1 { color: #f1c40f; font-size: 30px; margin-top: 0; margin-bottom: 20px; text-s
         <div class="stats-box">
             <div class="stats-row"><span style="color:#bdc3c7;">생명</span> <span id="cnation-lives-display">❤️❤️❤️🤍🤍</span></div>
             <div class="stats-row"><span style="color:#bdc3c7;">난이도</span> <span id="cnation-game-level" style="color:#f1c40f;">하</span></div>
-            <div class="stats-row"><span style="color:#bdc3c7;">SCORE</span> <span id="cnation-score-val" style="color:#2ecc71; font-size:24px;">0</span></div>
+            <div class="stats-row"><span style="color:#bdc3c7;">SCORE</span> <span id="cnation-score-val" style="color:#2ecc71; font-size:20px;">0</span></div>
         </div>
 
         <div id="cnation-feedback-text">게임을 시작합니다! 화이팅!</div>
@@ -165,57 +178,57 @@ h1 { color: #f1c40f; font-size: 30px; margin-top: 0; margin-bottom: 20px; text-s
 
     <!-- 3. 게임 오버 화면 -->
     <div id="cnation-game-over" class="panel-screen" style="display: none;">
-        <h1 style="color:#e74c3c; font-size:40px;">GAME OVER!</h1>
+        <h1 style="color:#e74c3c; font-size:36px;">GAME OVER!</h1>
         <div class="stats-box">
-            <div class="stats-row"><span style="color:#bdc3c7;">최종 점수</span> <span id="cnation-final-score" style="color:#2ecc71; font-size:24px;">0</span></div>
-            <div class="stats-row"><span style="color:#bdc3c7;">맞춘 단어</span> <span id="cnation-final-correct" style="color:#f1c40f; font-size:20px;">0</span>개</div>
+            <div class="stats-row"><span style="color:#bdc3c7;">최종 점수</span> <span id="cnation-final-score" style="color:#2ecc71; font-size:20px;">0</span></div>
+            <div class="stats-row"><span style="color:#bdc3c7;">맞춘 단어</span> <span id="cnation-final-correct" style="color:#f1c40f; font-size:18px;">0</span>개</div>
         </div>
         <div style="font-weight:bold; margin-bottom:10px; color:#e74c3c;">[ 오답 및 놓친 단어 ]</div>
-        <div id="cnation-missed-list" style="max-height: 200px; width: 100%; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; text-align: left; box-sizing: border-box; margin-bottom:20px;"></div>
+        <div id="cnation-missed-list" style="max-height: 180px; width: 100%; overflow-y: auto; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; text-align: left; box-sizing: border-box; margin-bottom:15px; font-size:14px;"></div>
         <button id="cnation-btn-go-title" class="cnation-btn" onclick="cnationGoToTitle()">타이틀로 돌아가기</button>
     </div>
 
     <!-- 4. 랭킹 등록 화면 -->
     <div id="cnation-prompt-screen" class="panel-screen" style="display: none;">
-        <div style="background:#fff; padding:20px; border-radius:15px; text-align:center; width:100%; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.5); color:#000;">
+        <div style="background:#fff; padding:20px; border-radius:12px; text-align:center; width:100%; box-sizing: border-box; box-shadow: 0 10px 25px rgba(0,0,0,0.5); color:#000;">
             <h3 style="margin-top:0; color:#e74c3c;">🏆 Top 10 진입 🏆</h3>
-            <p style="font-size:14px; color:#333; font-weight:bold; margin-bottom:15px;">축하합니다! 랭킹에 등록할<br>이름(닉네임)을 입력해주세요.</p>
-            <input type="text" id="cnation-prompt-input" maxlength="20" style="width:100%; padding:10px; margin-bottom:20px; border:2px solid #ccc; border-radius:8px; font-size:16px; box-sizing: border-box;">
+            <p style="font-size:13px; color:#333; font-weight:bold; margin-bottom:15px;">축하합니다! 랭킹에 등록할<br>이름(닉네임)을 입력해주세요.</p>
+            <input type="text" id="cnation-prompt-input" maxlength="20" style="width:100%; padding:10px; margin-bottom:15px; border:2px solid #ccc; border-radius:8px; font-size:15px; box-sizing: border-box;">
             <button class="cnation-btn" style="width:100%; margin:0 0 10px 0;" onclick="cnationSubmitName()">확인</button>
             <button class="cnation-btn" style="width:100%; margin:0; background-color:#95a5a6; box-shadow:0 5px 0 #7f8c8d;" onclick="cnationCancelName()">이름 입력 안할래요</button>
         </div>
     </div>
 
     <!-- 5. 랭킹 보기 화면 -->
-    <div id="cnation-ranking-screen" class="panel-screen" style="display: none; justify-content: flex-start;">
+    <div id="cnation-ranking-screen" class="panel-screen" style="display: none;">
         <h1>🏆 랭킹 Top 10 🏆</h1>
-        <div id="cnation-ranking-content" style="width: 100%; margin-bottom: 20px;"></div>
+        <div id="cnation-ranking-content" style="width: 100%; margin-bottom: 15px;"></div>
         <button class="cnation-btn" onclick="cnationCloseRanking()">돌아가기</button>
-        <button onclick="cnationResetRanking()" style="margin-top: 20px; margin-bottom: 10px; font-size: 12px; color: #7f8c8d; background: transparent; border: none; cursor: pointer; text-decoration: underline;">랭킹 리셋 (관리자용)</button>
+        <button onclick="cnationResetRanking()" style="margin-top: 15px; margin-bottom: 10px; font-size: 11px; color: #7f8c8d; background: transparent; border: none; cursor: pointer; text-decoration: underline;">랭킹 리셋 (관리자용)</button>
     </div>
 
     <!-- 6. 게임 설명서 화면 -->
-    <div id="cnation-info-screen" class="panel-screen" style="display: none; justify-content: flex-start;">
+    <div id="cnation-info-screen" class="panel-screen" style="display: none;">
         <h1>게임 설명서</h1>
         <div class="cnation-info-section">
             (1) 조작: <b>마우스 드래그</b> 또는 <b>화살표 키</b>로 지렁이 방향 조정<br><br>
             (2) 게임 종료: 벽이나 방해꾼 부딪힘, 체력(❤️) 모두 소진 시<br><br>
             (3) 난이도: 10문제마다 중/상으로 상승 (속도 및 방해꾼 증가)
         </div>
-        <div style="font-weight: 900; font-size: 18px; margin-bottom: 15px; color: #f1c40f;">[ 게임 규칙 및 아이템 ]</div>
+        <div style="font-weight: 900; font-size: 16px; margin-bottom: 10px; color: #f1c40f;">[ 게임 규칙 및 아이템 ]</div>
         <div class="cnation-info-item" style="border: 2px solid #2ecc71;">
-            <span style="font-size:24px; margin-right:10px;">🟩</span> <div><b>기본 먹이:</b> 맞히면 +10점, <b>틀리면 -5점 감점</b></div>
+            <span style="font-size:20px; margin-right:8px;">🟩</span> <div><b>기본 먹이:</b> 맞히면 +10점, <b>틀리면 -5점 감점</b></div>
         </div>
         <div class="cnation-info-item" style="border: 2px solid #e74c3c;">
-            <span style="font-size:24px; margin-right:10px;">💖</span> <div><b>하트 먹이:</b> 획득 시 체력 +1 회복 (최대 5)</div>
+            <span style="font-size:20px; margin-right:8px;">💖</span> <div><b>하트 먹이:</b> 체력 +1 회복</div>
         </div>
         <div class="cnation-info-item" style="border: 2px solid #f1c40f;">
-            <span style="font-size:24px; margin-right:10px;">⭐</span> <div><b>별표 먹이:</b> 5문제 동안 정답 점수 두배 (20점 적용)</div>
+            <span style="font-size:20px; margin-right:8px;">⭐</span> <div><b>별표 먹이:</b> 5문제 동안 점수 두배</div>
         </div>
         <div class="cnation-info-item" style="border: 2px solid #3498db;">
-            <span style="font-size:24px; margin-right:10px;">💎</span> <div><b>얼음 보석:</b> 방해꾼이 멈추며 통과 가능한 상태가 됨</div>
+            <span style="font-size:20px; margin-right:8px;">💎</span> <div><b>얼음 보석:</b> 방해꾼 일시정지 및 통과</div>
         </div>
-        <button class="cnation-btn" style="margin-top: 30px;" onclick="cnationCloseInfo()">돌아가기</button>
+        <button class="cnation-btn" style="margin-top: 20px;" onclick="cnationCloseInfo()">돌아가기</button>
     </div>
 
 </div>
