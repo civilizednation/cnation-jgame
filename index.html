@@ -345,7 +345,7 @@ text-align: center;
 <button class="cnation-btn cnation-btn-rank" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowRanking()">랭킹 확인</button>
 <button class="cnation-btn cnation-btn-info" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowInfo()">게임 설명</button>
 </div>
-<div id="cnation-version-tag">Version 1.2.3</div>
+<div id="cnation-version-tag">Version 1.2.4</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -445,10 +445,8 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const SCORE_COL = "cnation-snake-scores";
 
-// 사전 로딩 전역 변수 (캐시 데이터)
 let cnationCachedScores = { kindergarten: [], elementary: [], middle: [], high: [] };
 
-// 앱 시작 시 Firebase 랭킹 데이터 미리 로드 (Pre-fetch)
 async function cnationPreloadRankings() {
   const levels = ['kindergarten', 'elementary', 'middle', 'high'];
   try {
@@ -539,17 +537,19 @@ const osc = cnationAudioCtx.createOscillator();
 const gain = cnationAudioCtx.createGain();
 osc.connect(gain); gain.connect(cnationAudioCtx.destination);
 const now = cnationAudioCtx.currentTime;
-let targetVolume = 0.075;
 
 if (type === 'correct') {
+let targetVolume = 0.15; // 정답 효과음만 볼륨 2배 적용 (0.075 -> 0.15)
 osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now); osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.15);
 gain.gain.setValueAtTime(targetVolume, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
 osc.start(now); osc.stop(now + 0.15);
 } else if (type === 'wrong') {
+let targetVolume = 0.075;
 osc.type = 'sawtooth'; osc.frequency.setValueAtTime(180, now); osc.frequency.linearRampToValueAtTime(90, now + 0.2);
 gain.gain.setValueAtTime(targetVolume, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
 osc.start(now); osc.stop(now + 0.2);
 } else if (type === 'die') {
+let targetVolume = 0.075;
 osc.type = 'square'; osc.frequency.setValueAtTime(300, now); osc.frequency.linearRampToValueAtTime(60, now + 0.4);
 gain.gain.setValueAtTime(targetVolume, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 osc.start(now); osc.stop(now + 0.4);
@@ -558,14 +558,17 @@ osc.type = 'triangle'; osc.frequency.setValueAtTime(150, now); osc.frequency.exp
 gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 osc.start(now); osc.stop(now + 0.1);
 } else if (type === 'heal') {
+let targetVolume = 0.075;
 osc.type = 'sine'; osc.frequency.setValueAtTime(440, now); osc.frequency.exponentialRampToValueAtTime(880, now + 0.2);
 gain.gain.setValueAtTime(targetVolume, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
 osc.start(now); osc.stop(now + 0.2);
 } else if (type === 'freeze') {
+let targetVolume = 0.075;
 osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.linearRampToValueAtTime(1200, now + 0.3);
 gain.gain.setValueAtTime(targetVolume, now); gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
 osc.start(now); osc.stop(now + 0.3);
 } else if (type === 'bonus') {
+let targetVolume = 0.075;
 osc.type = 'square'; osc.frequency.setValueAtTime(400, now); osc.frequency.setValueAtTime(600, now + 0.1); osc.frequency.setValueAtTime(800, now + 0.2);
 gain.gain.setValueAtTime(targetVolume, now); gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
 osc.start(now); osc.stop(now + 0.3);
@@ -727,11 +730,10 @@ document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'none';
 document.getElementById('cnation-start-screen').style.display = 'flex';
 cnationGameState = 'TITLE';
-cnationPreloadRankings(); // 타이틀 돌아올 때 백그라운드 갱신
+cnationPreloadRankings();
 for(let i=0; i<4; i++) { document.getElementById('cnation-label-'+i).style.display = 'none'; }
 };
 
-// 메모리에 로드된 점수를 딜레이 없이 보여주는 랭킹 출력 함수
 window.cnationShowRanking = function() {
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-ranking-screen').style.display = 'flex';
@@ -792,7 +794,6 @@ window.cnationShowRanking();
 } else if (pw !== null) { alert("비밀번호가 틀렸습니다."); }
 };
 
-// 메모리에 캐시된 데이터로 딜레이 없이 신기록 판정
 function cnationHandleScore(score, levelKey) {
 if (score <= 0) return;
 let topScores = cnationCachedScores[levelKey] || [];
@@ -824,7 +825,6 @@ cnationPendingScoresList.push({ name: name, score: cnationPendingScore });
 cnationPendingScoresList.sort((a, b) => b.score - a.score);
 cnationPendingScoresList = cnationPendingScoresList.slice(0, 10);
 
-// 메모리 사전 업데이트
 cnationCachedScores[cnationPendingLevel] = cnationPendingScoresList;
 
 try {
@@ -1021,7 +1021,6 @@ document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
-// 사전 로드된 데이터로 즉시 신기록 판정
 cnationHandleScore(cnationScore, levelKey);
 }
 
