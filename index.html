@@ -151,17 +151,22 @@ background: #00ff00;
 transition: width 0.1s linear, background 0.3s;
 }
 #cnation-feedback-container {
-margin-top: 8px;
-min-height: 28px;
+position: absolute;
+bottom: 40px;
+width: 100%;
+text-align: center;
+z-index: 25;
+pointer-events: none;
 }
 #cnation-feedback-text {
 display: none;
-padding: 4px 12px;
-background: rgba(255, 255, 255, 0.9);
-border-radius: 12px;
+padding: 8px 16px;
+background: rgba(255, 255, 255, 0.95);
+border-radius: 20px;
 font-weight: bold;
-font-size: 16px;
-box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+font-size: 18px;
+box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+border: 2px solid #ddd;
 }
 .cnation-word-label {
 position: absolute;
@@ -255,7 +260,7 @@ font-weight: bold;
 
 <button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
 <button class="cnation-btn cnation-btn-rank" onclick="cnationShowRanking()">게임 랭킹 확인</button>
-<div id="cnation-version-tag">Version 1.0.4</div>
+<div id="cnation-version-tag">Version 1.0.5</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -269,9 +274,10 @@ font-weight: bold;
 <p class="cnation-ui-text">단어: <span id="cnation-vocab-display" class="cnation-highlight-box">유치원생</span> | 난이도: <span id="cnation-game-level" class="cnation-highlight-box">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
 <p id="cnation-question-text">의미</p>
 <div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
+</div>
+
 <div id="cnation-feedback-container">
 <span id="cnation-feedback-text"></span>
-</div>
 </div>
 
 <div id="cnation-labels-container">
@@ -534,7 +540,6 @@ window.cnationShowRanking = async function() {
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-ranking-screen').style.display = 'flex';
 const container = document.getElementById('cnation-ranking-content');
-container.innerHTML = '<p style="text-align:center; font-weight:bold;">데이터를 불러오는 중입니다...</p>';
 
 const levels = [
 { key: 'kindergarten', name: '유치원생', color: '#16a085' },
@@ -547,25 +552,33 @@ let html = '';
 for (let lvl of levels) {
 html += `<div style="background:#ffffff; border-radius:12px; padding:15px; margin-bottom:20px; border:2px solid ${lvl.color}; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 <h2 style="margin-top:0; margin-bottom:10px; color:${lvl.color}; text-align:center; font-size:22px;">${lvl.name}</h2>
-<table class="ranking-table">
-<tr><th>순위</th><th>이름</th><th>점수</th></tr>`;
+<div id="rank-content-${lvl.key}">
+<p style="text-align:center; font-weight:bold; color:#666;">데이터를 불러오는 중...</p>
+</div>
+</div>`;
+}
+container.innerHTML = html;
+
+for (let lvl of levels) {
 try {
 const snap = await getDoc(doc(db, SCORE_COL, lvl.key));
+let tableHtml = '<table class="ranking-table"><tr><th>순위</th><th>이름</th><th>점수</th></tr>';
 if (snap.exists() && snap.data().scores && snap.data().scores.length > 0) {
 const scores = snap.data().scores;
 scores.forEach((s, i) => {
 let icon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}위`;
-html += `<tr><td>${icon}</td><td style="color:#000;">${s.name}</td><td style="color:#e74c3c;">${s.score}</td></tr>`;
+tableHtml += `<tr><td>${icon}</td><td style="color:#000;">${s.name}</td><td style="color:#e74c3c;">${s.score}</td></tr>`;
 });
 } else {
-html += `<tr><td colspan="3" style="padding:15px; color:#999;">아직 등록된 랭킹이 없습니다.</td></tr>`;
+tableHtml += `<tr><td colspan="3" style="padding:15px; color:#999;">아직 등록된 랭킹이 없습니다.</td></tr>`;
 }
+tableHtml += '</table>';
+document.getElementById(`rank-content-${lvl.key}`).innerHTML = tableHtml;
 } catch (e) {
-html += `<tr><td colspan="3" style="padding:15px; color:#e74c3c;">데이터를 가져오지 못했습니다.</td></tr>`;
+console.error("Firebase Error: ", e);
+document.getElementById(`rank-content-${lvl.key}`).innerHTML = `<p style="text-align:center; color:#e74c3c; font-weight:bold;">데이터를 가져오지 못했습니다.</p>`;
 }
-html += `</table></div>`;
 }
-container.innerHTML = html;
 };
 
 window.cnationCloseRanking = function() {
