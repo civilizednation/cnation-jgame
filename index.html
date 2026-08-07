@@ -60,16 +60,17 @@ display: flex;
 justify-content: center;
 align-items: center;
 margin-bottom: 15px;
-gap: 3px;
+gap: 2px;
 background: #e0e0e0;
 padding: 8px 15px;
 border-radius: 20px;
 border: 1px solid #ccc;
 }
 .cnation-preview-dot {
-width: 22px;
-height: 22px;
+width: 24px;
+height: 24px;
 border-radius: 50%;
+box-shadow: inset -5px -5px 10px rgba(0,0,0,0.5), inset 3px 3px 8px rgba(255,255,255,0.7);
 }
 .cnation-btn {
 background-color: #333333;
@@ -135,6 +136,19 @@ width: 100%;
 height: 100%;
 background: #00ff00;
 transition: width 0.1s linear, background 0.3s;
+}
+#cnation-feedback-container {
+margin-top: 8px;
+min-height: 28px;
+}
+#cnation-feedback-text {
+display: none;
+padding: 4px 12px;
+background: rgba(255, 255, 255, 0.9);
+border-radius: 12px;
+font-weight: bold;
+font-size: 16px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 .cnation-word-label {
 position: absolute;
@@ -205,16 +219,20 @@ font-weight: bold;
 <div id="cnation-preview-head" class="cnation-preview-dot"></div>
 <div id="cnation-preview-body1" class="cnation-preview-dot"></div>
 <div id="cnation-preview-body2" class="cnation-preview-dot"></div>
+<div id="cnation-preview-body3" class="cnation-preview-dot"></div>
 </div>
 
 <button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
-<div id="cnation-version-tag">Version 1.0.2</div>
+<div id="cnation-version-tag">Version 1.0.3</div>
 </div>
 
 <div id="cnation-game-ui">
 <p class="cnation-ui-text">단어: <span id="cnation-vocab-display" class="cnation-highlight-box">유치원생</span> | 난이도: <span id="cnation-game-level" class="cnation-highlight-box">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
 <p id="cnation-question-text">의미</p>
 <div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
+<div id="cnation-feedback-container">
+<span id="cnation-feedback-text"></span>
+</div>
 </div>
 
 <div id="cnation-labels-container">
@@ -250,6 +268,7 @@ let conf = cnationColorConfig[colorKey];
 document.getElementById('cnation-preview-head').style.backgroundColor = conf.hCss;
 document.getElementById('cnation-preview-body1').style.backgroundColor = conf.bCss;
 document.getElementById('cnation-preview-body2').style.backgroundColor = conf.bCss;
+document.getElementById('cnation-preview-body3').style.backgroundColor = conf.bCss;
 }
 cnationUpdatePreview();
 
@@ -432,6 +451,10 @@ document.getElementById('cnation-vocab-display').innerText = levelText;
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'block';
+
+document.getElementById('cnation-feedback-text').style.display = 'none';
+document.getElementById('cnation-feedback-text').innerHTML = '';
+
 cnationAdjustCamera();
 cnationResetWorld();
 cnationGameState = 'PLAYING';
@@ -559,6 +582,11 @@ lbl.style.display = 'block';
 
 function cnationPenalty() {
 cnationPlaySound('wrong');
+
+let fb = document.getElementById('cnation-feedback-text');
+fb.innerHTML = `<span style="color:#8B0000;">틀렸습니다.</span> <span style="color:#008000;">정답은 ${cnationCurrentQuestion.en}(${cnationCurrentQuestion.ko})</span>`;
+fb.style.display = 'inline-block';
+
 cnationMissedWords.push(cnationCurrentQuestion);
 cnationScore -= 5;
 if(cnationScore < 0) cnationScore = 0;
@@ -671,6 +699,10 @@ let willGrow = false;
 if(pAteIndex !== -1) {
 if(cnationFoodData[pAteIndex].isCorrect) {
 cnationPlaySound('correct');
+let fb = document.getElementById('cnation-feedback-text');
+fb.innerHTML = `<span style="color:#000000;">${cnationCurrentQuestion.en} (${cnationCurrentQuestion.ko}) 정답 입니다.</span>`;
+fb.style.display = 'inline-block';
+
 willGrow = true;
 cnationScore += 10; cnationCorrectAnswers++;
 document.getElementById('cnation-score-val').innerText = cnationScore;
