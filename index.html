@@ -347,7 +347,7 @@ text-align: center;
 <button class="cnation-btn cnation-btn-rank" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowRanking()">랭킹 확인</button>
 <button class="cnation-btn cnation-btn-info" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowInfo()">게임 설명</button>
 </div>
-<div id="cnation-version-tag">Version 1.1.7</div>
+<div id="cnation-version-tag">Version 1.1.8</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -379,8 +379,8 @@ text-align: center;
 <div class="cnation-item-desc"><b>별표 먹이:</b> 5문제 동안 정답 점수 두배 (20점 적용)</div>
 </div>
 <div class="cnation-info-item" style="border: 2px solid #3498db;">
-<div class="cnation-item-icon">❄️</div>
-<div class="cnation-item-desc"><b>눈결정 먹이:</b> 방해꾼이 멈추며 통과 가능한 투명 상태가 됨</div>
+<div class="cnation-item-icon">💎</div>
+<div class="cnation-item-desc"><b>얼음 보석 먹이:</b> 방해꾼이 멈추며 통과 가능한 투명 상태가 됨</div>
 </div>
 <div class="cnation-info-footer">
 제작자 : 문명국<br>
@@ -469,6 +469,7 @@ const cnationMatEnemyBody = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, ro
 const cnationMatEnemyRing = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.6, metalness: 0.1 });
 
 const cnationMatFood = new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.3 });
+const cnationMatIce = new THREE.MeshStandardMaterial({ color: 0x00ffff, roughness: 0.1, metalness: 0.8, emissive: 0x002244 });
 
 function cnationCreateEmojiSprite(emoji) {
 const canvas = document.createElement('canvas');
@@ -674,6 +675,7 @@ const cnationMatWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
 const cnationMatBlack = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
 const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
+const cnationGeoIceCrystal = new THREE.OctahedronGeometry(0.4, 0);
 
 function cnationCreateHeadMesh(isEnemy) {
 const group = new THREE.Group();
@@ -1061,7 +1063,7 @@ cnationHeartItem = { x: pos.x, z: pos.z, mesh: m };
 if(Math.random() < 1.0) {
 let pos = getValidPos();
 if(pos) {
-let m = cnationCreateEmojiSprite('❄️');
+let m = new THREE.Mesh(cnationGeoIceCrystal, cnationMatIce);
 m.position.set(pos.x, 0.5, pos.z);
 cnationScene.add(m);
 cnationIceItem = { x: pos.x, z: pos.z, mesh: m };
@@ -1341,6 +1343,7 @@ if(cnationTimeLeft < 4) fill.style.background = '#ff0000';
 if(cnationTimeLeft <= 0) cnationPenalty();
 
 cnationFoodData.forEach(f => { f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03; });
+if(cnationIceItem) { cnationIceItem.mesh.rotation.x += 0.04; cnationIceItem.mesh.rotation.y += 0.04; }
 
 if (time - cnationLastTickTime > cnationBaseInterval) {
 cnationPlayerTick();
