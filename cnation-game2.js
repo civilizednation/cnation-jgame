@@ -118,7 +118,6 @@ const cnationBounds = { x: 11, y: 11 };
 const cnationCamera = new THREE.OrthographicCamera(-14, 14, 14, -14, 0.1, 1000);
 
 const cnationRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-// left-panel 내부의 canvas-wrapper에만 렌더링 요소를 삽입합니다.
 const canvasWrapper = document.getElementById('canvas-wrapper');
 canvasWrapper.appendChild(cnationRenderer.domElement);
 
@@ -249,7 +248,6 @@ for(let i=cnationLives; i<cnationMaxLives; i++) hearts += "🤍";
 document.getElementById('cnation-lives-display').innerText = hearts;
 }
 
-// 화면 전환 함수 간소화
 function showScreen(screenId) {
 const screens = ['cnation-start-screen', 'cnation-game-ui', 'cnation-game-over', 'cnation-prompt-screen', 'cnation-ranking-screen', 'cnation-info-screen'];
 screens.forEach(id => {
@@ -482,7 +480,6 @@ for(let i=0; i<count; i++) {
 let f = cnationFoodData[i]; if(!f) continue;
 let pos = f.mesh.position.clone(); pos.project(cnationCamera);
 
-// 캔버스 내 절대좌표로 변환 (wrapper 영역 기준)
 let x = (pos.x * 0.5 + 0.5) * w; 
 let y = (pos.y * -0.5 + 0.5) * h;
 
@@ -501,7 +498,6 @@ else if (e.key === 'ArrowLeft' && cnationPlayerDir.x === 0) cnationPlayerNextDir
 else if (e.key === 'ArrowRight' && cnationPlayerDir.x === 0) cnationPlayerNextDir = { x: 1, y: 0 };
 });
 
-// PC 환경용 마우스 드래그 조작 지원 (캔버스 안에서만 반응)
 let cnationMouseX = 0; let cnationMouseY = 0;
 let cnationIsMouseDown = false;
 
