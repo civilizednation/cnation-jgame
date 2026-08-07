@@ -252,13 +252,13 @@ border-radius: 16px;
 padding: 25px;
 box-shadow: 0 10px 20px rgba(0,0,0,0.15);
 text-align: left;
-font-size: 16px;
+font-size: 15px;
 color: #333;
 line-height: 1.7;
 margin-bottom: 20px;
 }
 .cnation-info-title {
-font-size: 26px;
+font-size: 24px;
 font-weight: 900;
 color: #2c3e50;
 text-align: center;
@@ -287,13 +287,13 @@ margin-right: 15px;
 }
 .cnation-item-desc {
 flex: 1;
-font-size: 15px;
+font-size: 14px;
 }
 .cnation-info-footer {
 margin-top: 20px;
 padding-top: 15px;
 border-top: 1px solid #ccc;
-font-size: 14px;
+font-size: 13px;
 color: #666;
 text-align: center;
 }
@@ -347,7 +347,7 @@ text-align: center;
 <button class="cnation-btn cnation-btn-rank" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowRanking()">랭킹 확인</button>
 <button class="cnation-btn cnation-btn-info" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowInfo()">게임 설명</button>
 </div>
-<div id="cnation-version-tag">Version 1.1.4</div>
+<div id="cnation-version-tag">Version 1.1.6</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -361,26 +361,26 @@ text-align: center;
 <div class="cnation-info-content">
 <div class="cnation-info-title">cnation 영어단어<br>지렁이게임 설명서</div>
 <div class="cnation-info-section">
-(1) 조작: 스마트폰/태블릿은 터치 스와이프, PC/노트북은 화살표 키로 이동<br><br>
-(2) 종료: 벽이나 방해꾼에 부딪히거나, 체력(❤️) 소진 시 게임 종료<br><br>
-(3) 난이도: '하'로 시작하여 10문제 단위로 속도 및 방해꾼 증가 (하→중→상)
+(1) 조작: 스마트폰은 스와이프, PC는 화살표 키로 지렁이 방향 조정<br>
+(2) 게임 종료: 벽이나 방해꾼 부딪힘, 체력(❤️) 모두 소진 시<br>
+(3) 난이도: '하'로 시작, 10문제마다 중/상으로 상승 (속도 및 방해꾼 증가)
 </div>
-<div style="font-weight: 900; font-size: 18px; margin-bottom: 10px; color: #2c3e50; text-align: center;">[ 특수 먹이 효과 ]</div>
+<div style="font-weight: 900; font-size: 17px; margin-bottom: 10px; color: #2c3e50; text-align: center;">[ 게임 규칙 및 아이템 ]</div>
 <div class="cnation-info-item" style="border: 2px solid #2ecc71;">
 <div class="cnation-item-icon">🟩</div>
-<div class="cnation-item-desc"><b>기본 먹이 (밝은 녹색)</b><br>단어 정답을 맞히면 점수 +10점</div>
+<div class="cnation-item-desc"><b>기본 먹이:</b> 맞히면 +10점, <b>틀리면 -5점 감점</b></div>
 </div>
 <div class="cnation-info-item" style="border: 2px solid #e74c3c;">
 <div class="cnation-item-icon">💖</div>
-<div class="cnation-item-desc"><b>하트 먹이 (밝은 빨강)</b><br>획득 시 체력 +1 회복 (최대 체력 5)</div>
+<div class="cnation-item-desc"><b>하트 먹이:</b> 획득 시 체력 +1 회복 (최대 5)</div>
 </div>
 <div class="cnation-info-item" style="border: 2px solid #f1c40f;">
 <div class="cnation-item-icon">⭐</div>
-<div class="cnation-item-desc"><b>별표 먹이 (밝은 노랑)</b><br>앞으로 5문제 정답 보너스 점수 두배 적용</div>
+<div class="cnation-item-desc"><b>별표 먹이:</b> 5문제 동안 정답 점수 두배 (20점 적용)</div>
 </div>
 <div class="cnation-info-item" style="border: 2px solid #3498db;">
 <div class="cnation-item-icon">🧊</div>
-<div class="cnation-item-desc"><b>얼음 먹이 (밝은 하늘색)</b><br>방해꾼이 멈추며 통과 가능한 투명 상태가 됨</div>
+<div class="cnation-item-desc"><b>얼음 먹이:</b> 방해꾼 일시 멈춤 및 투명(통과) 상태</div>
 </div>
 <div class="cnation-info-footer">
 제작자 : 문명국<br>
@@ -468,10 +468,20 @@ const cnationMatEnemyHead = new THREE.MeshStandardMaterial({ color: 0x333333, ro
 const cnationMatEnemyBody = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.4, metalness: 0.1 });
 const cnationMatEnemyRing = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.6, metalness: 0.1 });
 
-const cnationMatFood = new THREE.MeshStandardMaterial({ color: 0x33ff33, roughness: 0.3 });
-const cnationMatHeart = new THREE.MeshStandardMaterial({ color: 0xff0000, roughness: 0.2, metalness: 0.1 });
-const cnationMatIce = new THREE.MeshStandardMaterial({ color: 0x88ddff, transparent: true, opacity: 0.8, roughness: 0.1, metalness: 0.5 });
-const cnationMatStar = new THREE.MeshStandardMaterial({ color: 0xffea00, roughness: 0.2, metalness: 0.6, emissive: 0x443300 });
+const cnationMatFood = new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.3 });
+
+function cnationCreateEmojiSprite(emoji) {
+const canvas = document.createElement('canvas');
+canvas.width = 128; canvas.height = 128;
+const ctx = canvas.getContext('2d');
+ctx.font = '90px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+ctx.fillText(emoji, 64, 64);
+const texture = new THREE.CanvasTexture(canvas);
+const spriteMat = new THREE.SpriteMaterial({ map: texture });
+const sprite = new THREE.Sprite(spriteMat);
+sprite.scale.set(1.2, 1.2, 1.2);
+return sprite;
+}
 
 function cnationUpdateWormColors(conf) {
 cnationMatPlayerHead.color.setHex(conf.hHex);
@@ -479,7 +489,6 @@ cnationMatPlayerBody.color.setHex(conf.bHex);
 let hsl = {};
 cnationMatPlayerBody.color.getHSL(hsl);
 cnationMatPlayerRing.color.setHSL(hsl.h, hsl.s, Math.max(0, hsl.l - 0.2));
-
 document.getElementById('cnation-preview-head').style.backgroundColor = conf.hCss;
 document.getElementById('cnation-preview-body1').style.backgroundColor = conf.bCss;
 document.getElementById('cnation-preview-body2').style.backgroundColor = conf.bCss;
@@ -665,35 +674,6 @@ const cnationMatWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
 const cnationMatBlack = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
 const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
-
-const cnationHeartShape = new THREE.Shape();
-const hx = 0, hy = 0;
-cnationHeartShape.moveTo( hx + 5, hy + 5 );
-cnationHeartShape.bezierCurveTo( hx + 5, hy + 5, hx + 4, hy, hx, hy );
-cnationHeartShape.bezierCurveTo( hx - 6, hy, hx - 6, hy + 7, hx - 6, hy + 7 );
-cnationHeartShape.bezierCurveTo( hx - 6, hy + 11, hx - 3, hy + 15.4, hx + 5, hy + 19 );
-cnationHeartShape.bezierCurveTo( hx + 12, hy + 15.4, hx + 16, hy + 11, hx + 16, hy + 7 );
-cnationHeartShape.bezierCurveTo( hx + 16, hy + 7, hx + 16, hy, hx + 10, hy );
-cnationHeartShape.bezierCurveTo( hx + 7, hy, hx + 5, hy + 5, hx + 5, hy + 5 );
-const cnationHeartExtrude = { depth: 2, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 1, bevelThickness: 1, curveSegments: 12 };
-const cnationGeoHeart = new THREE.ExtrudeGeometry( cnationHeartShape, cnationHeartExtrude );
-cnationGeoHeart.center();
-cnationGeoHeart.scale(0.025, -0.025, 0.025);
-
-const cnationGeoIce = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-
-const cnationStarShape = new THREE.Shape();
-const outerRadius = 10, innerRadius = 4, numPoints = 5;
-for(let i = 0; i < numPoints * 2; i++) {
-const r = (i % 2 === 0) ? outerRadius : innerRadius;
-const a = i * Math.PI / numPoints;
-if(i === 0) cnationStarShape.moveTo(r * Math.sin(a), r * Math.cos(a));
-else cnationStarShape.lineTo(r * Math.sin(a), r * Math.cos(a));
-}
-const cnationStarExtrude = { depth: 2, bevelEnabled: true, bevelThickness: 1, bevelSize: 1, bevelSegments: 1, curveSegments: 12 };
-const cnationGeoStar = new THREE.ExtrudeGeometry(cnationStarShape, cnationStarExtrude);
-cnationGeoStar.center();
-cnationGeoStar.scale(0.03, 0.03, 0.03);
 
 function cnationCreateHeadMesh(isEnemy) {
 const group = new THREE.Group();
@@ -1069,9 +1049,8 @@ return valid ? {x: rx, z: rz} : null;
 if(Math.random() < 0.50) {
 let pos = getValidPos();
 if(pos) {
-let m = new THREE.Mesh(cnationGeoHeart, cnationMatHeart);
+let m = cnationCreateEmojiSprite('💖');
 m.position.set(pos.x, 0.5, pos.z);
-m.rotation.x = -Math.PI / 2 + 0.2;
 cnationScene.add(m);
 cnationHeartItem = { x: pos.x, z: pos.z, mesh: m };
 }
@@ -1079,10 +1058,8 @@ cnationHeartItem = { x: pos.x, z: pos.z, mesh: m };
 if(Math.random() < 0.50) {
 let pos = getValidPos();
 if(pos) {
-let m = new THREE.Mesh(cnationGeoIce, cnationMatIce);
+let m = cnationCreateEmojiSprite('🧊');
 m.position.set(pos.x, 0.5, pos.z);
-m.rotation.x = Math.PI / 4;
-m.rotation.y = Math.PI / 4;
 cnationScene.add(m);
 cnationIceItem = { x: pos.x, z: pos.z, mesh: m };
 }
@@ -1090,9 +1067,8 @@ cnationIceItem = { x: pos.x, z: pos.z, mesh: m };
 if(Math.random() < 0.50) {
 let pos = getValidPos();
 if(pos) {
-let m = new THREE.Mesh(cnationGeoStar, cnationMatStar);
+let m = cnationCreateEmojiSprite('⭐');
 m.position.set(pos.x, 0.5, pos.z);
-m.rotation.x = -Math.PI / 2 + 0.2;
 cnationScene.add(m);
 cnationStarItem = { x: pos.x, z: pos.z, mesh: m };
 }
