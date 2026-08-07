@@ -347,7 +347,7 @@ text-align: center;
 <button class="cnation-btn cnation-btn-rank" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowRanking()">랭킹 확인</button>
 <button class="cnation-btn cnation-btn-info" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowInfo()">게임 설명</button>
 </div>
-<div id="cnation-version-tag">Version 1.1.8</div>
+<div id="cnation-version-tag">Version 1.1.9</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -469,7 +469,6 @@ const cnationMatEnemyBody = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, ro
 const cnationMatEnemyRing = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.6, metalness: 0.1 });
 
 const cnationMatFood = new THREE.MeshStandardMaterial({ color: 0x2ecc71, roughness: 0.3 });
-const cnationMatIce = new THREE.MeshStandardMaterial({ color: 0x00ffff, roughness: 0.1, metalness: 0.8, emissive: 0x002244 });
 
 function cnationCreateEmojiSprite(emoji) {
 const canvas = document.createElement('canvas');
@@ -675,7 +674,6 @@ const cnationMatWhite = new THREE.MeshBasicMaterial({ color: 0xffffff });
 const cnationMatBlack = new THREE.MeshBasicMaterial({ color: 0x000000 });
 
 const cnationGeoBox = new THREE.BoxGeometry(0.7, 0.7, 0.7);
-const cnationGeoIceCrystal = new THREE.OctahedronGeometry(0.4, 0);
 
 function cnationCreateHeadMesh(isEnemy) {
 const group = new THREE.Group();
@@ -1063,7 +1061,7 @@ cnationHeartItem = { x: pos.x, z: pos.z, mesh: m };
 if(Math.random() < 1.0) {
 let pos = getValidPos();
 if(pos) {
-let m = new THREE.Mesh(cnationGeoIceCrystal, cnationMatIce);
+let m = cnationCreateEmojiSprite('💎');
 m.position.set(pos.x, 0.5, pos.z);
 cnationScene.add(m);
 cnationIceItem = { x: pos.x, z: pos.z, mesh: m };
@@ -1217,7 +1215,7 @@ cnationEnemiesFrozen = true;
 cnationMatEnemyHead.transparent = true; cnationMatEnemyHead.opacity = 0.3;
 cnationMatEnemyBody.transparent = true; cnationMatEnemyBody.opacity = 0.3;
 cnationMatEnemyRing.transparent = true; cnationMatEnemyRing.opacity = 0.3;
-cnationShowEventMsg('방해꾼 빙결 ❄️', 'rgba(52, 152, 219, 0.9)');
+cnationShowEventMsg('방해꾼 빙결 💎', 'rgba(52, 152, 219, 0.9)');
 }
 
 if(cnationStarItem && px === cnationStarItem.x && pz === cnationStarItem.z) {
@@ -1343,7 +1341,6 @@ if(cnationTimeLeft < 4) fill.style.background = '#ff0000';
 if(cnationTimeLeft <= 0) cnationPenalty();
 
 cnationFoodData.forEach(f => { f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03; });
-if(cnationIceItem) { cnationIceItem.mesh.rotation.x += 0.04; cnationIceItem.mesh.rotation.y += 0.04; }
 
 if (time - cnationLastTickTime > cnationBaseInterval) {
 cnationPlayerTick();
