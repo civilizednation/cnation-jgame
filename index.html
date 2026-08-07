@@ -347,7 +347,7 @@ text-align: center;
 <button class="cnation-btn cnation-btn-rank" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowRanking()">랭킹 확인</button>
 <button class="cnation-btn cnation-btn-info" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowInfo()">게임 설명</button>
 </div>
-<div id="cnation-version-tag">Version 1.1.6</div>
+<div id="cnation-version-tag">Version 1.1.7</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -379,8 +379,8 @@ text-align: center;
 <div class="cnation-item-desc"><b>별표 먹이:</b> 5문제 동안 정답 점수 두배 (20점 적용)</div>
 </div>
 <div class="cnation-info-item" style="border: 2px solid #3498db;">
-<div class="cnation-item-icon">🧊</div>
-<div class="cnation-item-desc"><b>얼음 먹이:</b> 방해꾼 일시 멈춤 및 투명(통과) 상태</div>
+<div class="cnation-item-icon">❄️</div>
+<div class="cnation-item-desc"><b>눈결정 먹이:</b> 방해꾼이 멈추며 통과 가능한 투명 상태가 됨</div>
 </div>
 <div class="cnation-info-footer">
 제작자 : 문명국<br>
@@ -479,7 +479,7 @@ ctx.fillText(emoji, 64, 64);
 const texture = new THREE.CanvasTexture(canvas);
 const spriteMat = new THREE.SpriteMaterial({ map: texture });
 const sprite = new THREE.Sprite(spriteMat);
-sprite.scale.set(1.2, 1.2, 1.2);
+sprite.scale.set(1.5, 1.5, 1.5);
 return sprite;
 }
 
@@ -764,6 +764,9 @@ document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'none';
 document.getElementById('cnation-start-screen').style.display = 'flex';
 cnationGameState = 'TITLE';
+for(let i=0; i<4; i++) {
+document.getElementById('cnation-label-'+i).style.display = 'none';
+}
 };
 
 window.cnationShowRanking = async function() {
@@ -1046,7 +1049,7 @@ attempts++;
 return valid ? {x: rx, z: rz} : null;
 }
 
-if(Math.random() < 0.50) {
+if(Math.random() < 1.0) {
 let pos = getValidPos();
 if(pos) {
 let m = cnationCreateEmojiSprite('💖');
@@ -1055,16 +1058,16 @@ cnationScene.add(m);
 cnationHeartItem = { x: pos.x, z: pos.z, mesh: m };
 }
 }
-if(Math.random() < 0.50) {
+if(Math.random() < 1.0) {
 let pos = getValidPos();
 if(pos) {
-let m = cnationCreateEmojiSprite('🧊');
+let m = cnationCreateEmojiSprite('❄️');
 m.position.set(pos.x, 0.5, pos.z);
 cnationScene.add(m);
 cnationIceItem = { x: pos.x, z: pos.z, mesh: m };
 }
 }
-if(Math.random() < 0.50) {
+if(Math.random() < 1.0) {
 let pos = getValidPos();
 if(pos) {
 let m = cnationCreateEmojiSprite('⭐');
@@ -1212,7 +1215,7 @@ cnationEnemiesFrozen = true;
 cnationMatEnemyHead.transparent = true; cnationMatEnemyHead.opacity = 0.3;
 cnationMatEnemyBody.transparent = true; cnationMatEnemyBody.opacity = 0.3;
 cnationMatEnemyRing.transparent = true; cnationMatEnemyRing.opacity = 0.3;
-cnationShowEventMsg('방해꾼 빙결 🧊', 'rgba(52, 152, 219, 0.9)');
+cnationShowEventMsg('방해꾼 빙결 ❄️', 'rgba(52, 152, 219, 0.9)');
 }
 
 if(cnationStarItem && px === cnationStarItem.x && pz === cnationStarItem.z) {
