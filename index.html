@@ -12,7 +12,7 @@ background-color: #34495e;
 font-family: 'Comic Sans MS', 'Malgun Gothic', sans-serif;
 touch-action: none;
 }
-#cnation-start-screen, #cnation-game-over {
+#cnation-start-screen, #cnation-game-over, #cnation-ranking-screen {
 position: absolute;
 top: 0; left: 0; width: 100%; height: 100%;
 display: flex;
@@ -25,6 +25,13 @@ z-index: 30;
 #cnation-game-over {
 display: none;
 background: rgba(0, 0, 0, 0.9);
+}
+#cnation-ranking-screen {
+display: none;
+justify-content: flex-start;
+padding-top: 30px;
+overflow-y: auto;
+z-index: 40;
 }
 h1 {
 color: #000000;
@@ -77,7 +84,7 @@ background-color: #333333;
 color: white;
 border: none;
 padding: 12px 30px;
-margin: 15px 10px 10px 10px;
+margin: 10px;
 font-size: 20px;
 font-weight: bold;
 border-radius: 30px;
@@ -88,6 +95,12 @@ width: 220px;
 .cnation-btn:active {
 transform: translateY(5px);
 box-shadow: none;
+}
+.cnation-btn-rank {
+background-color: #f39c12;
+box-shadow: 0 5px 0 #d68910;
+margin-top: 0px;
+margin-bottom: 20px;
 }
 #cnation-game-ui {
 position: absolute;
@@ -184,6 +197,24 @@ color: #888888;
 font-size: 12px;
 font-weight: bold;
 }
+.ranking-table {
+width: 100%;
+text-align: center;
+border-collapse: collapse;
+margin-top: 10px;
+font-size: 16px;
+}
+.ranking-table th {
+border-bottom: 2px solid #ccc;
+padding: 8px;
+color: #333;
+}
+.ranking-table td {
+border-bottom: 1px solid #eee;
+padding: 8px;
+color: #555;
+font-weight: bold;
+}
 </style>
 </head>
 <body>
@@ -223,7 +254,15 @@ font-weight: bold;
 </div>
 
 <button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
-<div id="cnation-version-tag">Version 1.0.3</div>
+<button class="cnation-btn cnation-btn-rank" onclick="cnationShowRanking()">게임 랭킹 확인</button>
+<div id="cnation-version-tag">Version 1.0.4</div>
+</div>
+
+<div id="cnation-ranking-screen">
+<h1>🏆 랭킹 Top 5 🏆</h1>
+<div id="cnation-ranking-content" style="width: 90%; max-width: 400px; margin-bottom: 20px;"></div>
+<button class="cnation-btn" onclick="cnationCloseRanking()">돌아가기</button>
+<button onclick="cnationResetRanking()" style="margin-top: 30px; margin-bottom: 30px; font-size: 11px; color: #aaaaaa; background: transparent; border: none; cursor: pointer; text-decoration: underline;">랭킹 리셋 (관리자용)</button>
 </div>
 
 <div id="cnation-game-ui">
@@ -252,7 +291,26 @@ font-weight: bold;
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="./word.js"></script>
-<script>
+
+<!-- Firebase SDK (ES Module) -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyCTwOAC_LrrKH8CKepUOTf0pyd9qRv4y_8",
+authDomain: "cnation-project.firebaseapp.com",
+projectId: "cnation-project",
+storageBucket: "cnation-project.firebasestorage.app",
+messagingSenderId: "1004154104261",
+appId: "1:1004154104261:web:0eac4c7ded38262ae5c3ac",
+measurementId: "G-7PW1NSP5EQ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const SCORE_COL = "cnation-snake-scores";
+
 const cnationColorConfig = {
 green: { hHex: 0x145a32, bHex: 0x58d68d, hCss: '#145a32', bCss: '#58d68d' },
 blue: { hHex: 0x154360, bHex: 0x5dade2, hCss: '#154360', bCss: '#5dade2' },
@@ -262,15 +320,15 @@ yellow: { hHex: 0x7d6608, bHex: 0xf7dc6f, hCss: '#7d6608', bCss: '#f7dc6f' },
 purple: { hHex: 0x4a235a, bHex: 0xbb8fce, hCss: '#4a235a', bCss: '#bb8fce' }
 };
 
-function cnationUpdatePreview() {
+window.cnationUpdatePreview = function() {
 let colorKey = document.getElementById('cnation-color-select').value;
 let conf = cnationColorConfig[colorKey];
 document.getElementById('cnation-preview-head').style.backgroundColor = conf.hCss;
 document.getElementById('cnation-preview-body1').style.backgroundColor = conf.bCss;
 document.getElementById('cnation-preview-body2').style.backgroundColor = conf.bCss;
 document.getElementById('cnation-preview-body3').style.backgroundColor = conf.bCss;
-}
-cnationUpdatePreview();
+};
+window.cnationUpdatePreview();
 
 let cnationAudioCtx;
 
@@ -450,6 +508,7 @@ document.getElementById('cnation-vocab-display').innerText = levelText;
 
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
+document.getElementById('cnation-ranking-screen').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'block';
 
 document.getElementById('cnation-feedback-text').style.display = 'none';
@@ -470,6 +529,102 @@ for(let i=0; i<4; i++) {
 document.getElementById('cnation-label-'+i).style.display = 'none';
 }
 };
+
+window.cnationShowRanking = async function() {
+document.getElementById('cnation-start-screen').style.display = 'none';
+document.getElementById('cnation-ranking-screen').style.display = 'flex';
+const container = document.getElementById('cnation-ranking-content');
+container.innerHTML = '<p style="text-align:center; font-weight:bold;">데이터를 불러오는 중입니다...</p>';
+
+const levels = [
+{ key: 'kindergarten', name: '유치원생', color: '#16a085' },
+{ key: 'elementary', name: '초등학생', color: '#2980b9' },
+{ key: 'middle', name: '중학생', color: '#8e44ad' },
+{ key: 'high', name: '고등학생', color: '#c0392b' }
+];
+
+let html = '';
+for (let lvl of levels) {
+html += `<div style="background:#ffffff; border-radius:12px; padding:15px; margin-bottom:20px; border:2px solid ${lvl.color}; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+<h2 style="margin-top:0; margin-bottom:10px; color:${lvl.color}; text-align:center; font-size:22px;">${lvl.name}</h2>
+<table class="ranking-table">
+<tr><th>순위</th><th>이름</th><th>점수</th></tr>`;
+try {
+const snap = await getDoc(doc(db, SCORE_COL, lvl.key));
+if (snap.exists() && snap.data().scores && snap.data().scores.length > 0) {
+const scores = snap.data().scores;
+scores.forEach((s, i) => {
+let icon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}위`;
+html += `<tr><td>${icon}</td><td style="color:#000;">${s.name}</td><td style="color:#e74c3c;">${s.score}</td></tr>`;
+});
+} else {
+html += `<tr><td colspan="3" style="padding:15px; color:#999;">아직 등록된 랭킹이 없습니다.</td></tr>`;
+}
+} catch (e) {
+html += `<tr><td colspan="3" style="padding:15px; color:#e74c3c;">데이터를 가져오지 못했습니다.</td></tr>`;
+}
+html += `</table></div>`;
+}
+container.innerHTML = html;
+};
+
+window.cnationCloseRanking = function() {
+document.getElementById('cnation-ranking-screen').style.display = 'none';
+document.getElementById('cnation-start-screen').style.display = 'flex';
+};
+
+window.cnationResetRanking = async function() {
+let pw = prompt("관리자 비밀번호를 입력하세요:");
+if (pw === "1257") {
+const levels = ['kindergarten', 'elementary', 'middle', 'high'];
+for (let lvl of levels) {
+await setDoc(doc(db, SCORE_COL, lvl), { scores: [] });
+}
+alert("전체 랭킹이 성공적으로 초기화되었습니다.");
+window.cnationShowRanking();
+} else if (pw !== null) {
+alert("비밀번호가 틀렸습니다.");
+}
+};
+
+async function cnationHandleScore(score, levelKey) {
+if (score <= 0) return;
+const docRef = doc(db, SCORE_COL, levelKey);
+let topScores = [];
+try {
+const snap = await getDoc(docRef);
+if (snap.exists()) {
+topScores = snap.data().scores || [];
+}
+} catch (e) {
+console.error("Firebase fetch error", e);
+}
+
+let isHighScore = false;
+if (topScores.length < 5) {
+isHighScore = true;
+} else {
+const minScore = topScores[topScores.length - 1].score;
+if (score > minScore) isHighScore = true;
+}
+
+if (isHighScore) {
+let name = prompt(`축하합니다! [${document.getElementById('cnation-level-select').options[document.getElementById('cnation-level-select').selectedIndex].text}] Top 5 랭킹에 진입하셨습니다!\n\n이름이나 닉네임을 입력해주세요 (20자 이내):`);
+if (name) {
+name = name.substring(0, 20);
+topScores.push({ name: name, score: score });
+topScores.sort((a, b) => b.score - a.score);
+topScores = topScores.slice(0, 5);
+try {
+await setDoc(docRef, { scores: topScores });
+alert("랭킹이 등록되었습니다! 랭킹 확인 화면에서 순위를 확인해보세요.");
+} catch(e) {
+console.error("Save error", e);
+alert("저장 중 오류가 발생했습니다.");
+}
+}
+}
+}
 
 function cnationUpdateStage() {
 let levelSpan = document.getElementById('cnation-game-level');
@@ -671,6 +826,11 @@ document.getElementById('cnation-missed-list').innerHTML = missedHtml;
 
 document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
+
+let levelKey = document.getElementById('cnation-level-select').value;
+setTimeout(() => {
+cnationHandleScore(cnationScore, levelKey);
+}, 500);
 }
 
 function cnationPlayerTick() {
