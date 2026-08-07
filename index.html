@@ -12,7 +12,7 @@ background-color: #34495e;
 font-family: 'Comic Sans MS', 'Malgun Gothic', sans-serif;
 touch-action: none;
 }
-#cnation-start-screen, #cnation-game-over, #cnation-ranking-screen, #cnation-prompt-screen {
+#cnation-start-screen, #cnation-game-over, #cnation-ranking-screen, #cnation-prompt-screen, #cnation-info-screen {
 position: absolute;
 top: 0; left: 0; width: 100%; height: 100%;
 display: flex;
@@ -26,7 +26,7 @@ z-index: 30;
 display: none;
 background: rgba(0, 0, 0, 0.9);
 }
-#cnation-ranking-screen {
+#cnation-ranking-screen, #cnation-info-screen {
 display: none;
 justify-content: flex-start;
 padding-top: 30px;
@@ -109,8 +109,10 @@ box-shadow: none;
 .cnation-btn-rank {
 background-color: #f39c12;
 box-shadow: 0 5px 0 #d68910;
-margin-top: 0px;
-margin-bottom: 20px;
+}
+.cnation-btn-info {
+background-color: #3498db;
+box-shadow: 0 5px 0 #2980b9;
 }
 #cnation-game-ui {
 position: absolute;
@@ -242,6 +244,27 @@ padding: 8px;
 color: #555;
 font-weight: bold;
 }
+.cnation-info-content {
+width: 90%;
+max-width: 400px;
+background: #ffffff;
+border-radius: 12px;
+padding: 20px;
+box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+text-align: left;
+font-size: 14px;
+color: #333;
+line-height: 1.6;
+margin-bottom: 20px;
+}
+.cnation-info-footer {
+margin-top: 20px;
+padding-top: 15px;
+border-top: 1px solid #ccc;
+font-size: 13px;
+color: #666;
+text-align: center;
+}
 </style>
 </head>
 <body>
@@ -288,8 +311,11 @@ font-weight: bold;
 </div>
 
 <button class="cnation-btn" onclick="cnationStartGame()">게임 시작</button>
-<button class="cnation-btn cnation-btn-rank" onclick="cnationShowRanking()">게임 랭킹 확인</button>
-<div id="cnation-version-tag">Version 1.1.1</div>
+<div style="display: flex; gap: 10px; width: 220px; justify-content: space-between; margin-bottom: 20px;">
+<button class="cnation-btn cnation-btn-rank" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowRanking()">랭킹 확인</button>
+<button class="cnation-btn cnation-btn-info" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowInfo()">게임 설명</button>
+</div>
+<div id="cnation-version-tag">Version 1.1.3</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -297,6 +323,27 @@ font-weight: bold;
 <div id="cnation-ranking-content" style="width: 90%; max-width: 400px; margin-bottom: 20px;"></div>
 <button class="cnation-btn" onclick="cnationCloseRanking()">돌아가기</button>
 <button onclick="cnationResetRanking()" style="margin-top: 30px; margin-bottom: 30px; font-size: 11px; color: #aaaaaa; background: transparent; border: none; cursor: pointer; text-decoration: underline;">랭킹 리셋 (관리자용)</button>
+</div>
+
+<div id="cnation-info-screen">
+<h2 style="font-size: 22px; text-align: center; color: #2c3e50; margin-bottom: 20px;">cnation 영어단어<br>지렁이게임 설명서</h2>
+<div class="cnation-info-content">
+- 스마트폰이나 태블릿에서 터치로 스와이프 움직이거나 PC, 노트북에서 화살표 키로 지렁이 방향을 조정할 수 있음.<br><br>
+- 벽이나 방해꾼 지렁이와 부딪히면 게임 종료.<br><br>
+- 단어를 틀리거나 시간초과로 체력(❤️)을 모두 잃으면 게임 종료.<br><br>
+- 난이도는 '하'로 시작해서 10문제 맞힐 때마다 '중', '상'으로 변화하며 점점 더 게임 속도가 빨라지고 방해꾼 지렁이 수가 늘어남.<br><br>
+<b>[아이템 효과]</b><br>
+- <b>기본 먹이</b>: 기본 먹이 먹으면서 단어를 맞히면 점수 +10점<br>
+- <b>하트(💖)</b>: 하트 먹으면 체력 +1 (최대 체력은 5)<br>
+- <b>별표(⭐)</b>: 별표 먹으면 앞으로 5문제 정답 보너스 점수 두배<br>
+- <b>얼음(🧊)</b>: 얼음 먹으면 방해꾼 지렁이 멈추고 멈춘 방해꾼 지렁이는 닿아도 죽지 않음<br>
+<div class="cnation-info-footer">
+제작자 : 문명국<br>
+제작일 : 2026년 8월<br>
+문의/건의 : mmk75@naver.com
+</div>
+</div>
+<button class="cnation-btn" onclick="cnationCloseInfo()">돌아가기</button>
 </div>
 
 <div id="cnation-prompt-screen">
@@ -543,6 +590,7 @@ let cnationMaxEnemies = 2;
 let cnationMaxTime = 20;
 let cnationLives = 3;
 const cnationMaxLives = 5;
+let cnationStarBonusCount = 0;
 
 let cnationSelectedVocab = [];
 let cnationCurrentQuestion = null;
@@ -559,7 +607,6 @@ let cnationLastEnemyTickTime = 0;
 
 let cnationEnemies = [];
 let cnationFoodData = [];
-
 let cnationHeartItem = null;
 let cnationIceItem = null;
 let cnationStarItem = null;
@@ -674,6 +721,7 @@ document.getElementById('cnation-vocab-display').innerText = levelText;
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-ranking-screen').style.display = 'none';
+document.getElementById('cnation-info-screen').style.display = 'none';
 document.getElementById('cnation-prompt-screen').style.display = 'none';
 document.getElementById('cnation-game-ui').style.display = 'block';
 
@@ -749,6 +797,16 @@ document.getElementById(`rank-content-${lvl.key}`).innerHTML = `<p style="text-a
 
 window.cnationCloseRanking = function() {
 document.getElementById('cnation-ranking-screen').style.display = 'none';
+document.getElementById('cnation-start-screen').style.display = 'flex';
+};
+
+window.cnationShowInfo = function() {
+document.getElementById('cnation-start-screen').style.display = 'none';
+document.getElementById('cnation-info-screen').style.display = 'flex';
+};
+
+window.cnationCloseInfo = function() {
+document.getElementById('cnation-info-screen').style.display = 'none';
 document.getElementById('cnation-start-screen').style.display = 'flex';
 };
 
@@ -870,6 +928,7 @@ cnationScore = 0;
 cnationCorrectAnswers = 0;
 cnationMissedWords = [];
 cnationLives = 3;
+cnationStarBonusCount = 0;
 cnationUpdateLivesUI();
 document.getElementById('cnation-score-val').innerText = cnationScore;
 cnationPlayerDir = { x: 0, y: -1 };
@@ -1132,15 +1191,15 @@ cnationEnemiesFrozen = true;
 cnationMatEnemyHead.transparent = true; cnationMatEnemyHead.opacity = 0.3;
 cnationMatEnemyBody.transparent = true; cnationMatEnemyBody.opacity = 0.3;
 cnationMatEnemyRing.transparent = true; cnationMatEnemyRing.opacity = 0.3;
+cnationShowEventMsg('방해꾼 빙결 🧊', 'rgba(0, 255, 255, 0.9)');
 }
 
 if(cnationStarItem && px === cnationStarItem.x && pz === cnationStarItem.z) {
 cnationPlaySound('bonus');
 cnationScene.remove(cnationStarItem.mesh);
 cnationStarItem = null;
-cnationScore += 30;
-document.getElementById('cnation-score-val').innerText = cnationScore;
-cnationShowEventMsg('보너스 점수 30점 획득 ⭐', 'rgba(241, 196, 15, 0.95)');
+cnationStarBonusCount = 5;
+cnationShowEventMsg('앞으로 5문제 정답 점수 두배 보너스 ⭐', 'rgba(241, 196, 15, 0.95)');
 }
 
 let pAteIndex = -1;
@@ -1156,9 +1215,16 @@ let fb = document.getElementById('cnation-feedback-text');
 fb.innerHTML = `<span style="color:#000000;">${cnationCurrentQuestion.en} (${cnationCurrentQuestion.ko}) 정답 입니다.</span>`;
 fb.style.display = 'inline-block';
 
-willGrow = true;
-cnationScore += 10; cnationCorrectAnswers++;
+if (cnationStarBonusCount > 0) {
+cnationScore += 20;
+cnationStarBonusCount--;
+} else {
+cnationScore += 10;
+}
+cnationCorrectAnswers++;
 document.getElementById('cnation-score-val').innerText = cnationScore;
+
+willGrow = true;
 cnationUpdateStage();
 cnationSpawnQuestion();
 } else {
