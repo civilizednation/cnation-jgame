@@ -345,7 +345,7 @@ text-align: center;
 <button class="cnation-btn cnation-btn-rank" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowRanking()">랭킹 확인</button>
 <button class="cnation-btn cnation-btn-info" style="width: 105px; margin: 0; font-size: 15px; padding: 12px 0;" onclick="cnationShowInfo()">게임 설명</button>
 </div>
-<div id="cnation-version-tag">Version 1.2.1</div>
+<div id="cnation-version-tag">Version 1.2.2</div>
 </div>
 
 <div id="cnation-ranking-screen">
@@ -421,7 +421,8 @@ text-align: center;
 <p class="cnation-ui-text">최종 점수: <span id="cnation-final-score">0</span></p>
 <p class="cnation-ui-text">맞춘 단어: <span id="cnation-final-correct">0</span>개</p>
 <div id="cnation-missed-list"></div>
-<button class="cnation-btn" onclick="cnationGoToTitle()">타이틀로</button>
+<p id="cnation-ranking-check-msg" class="cnation-ui-text" style="color:#f1c40f; margin:15px 0;">랭킹 기록 확인 중...⏳</p>
+<button id="cnation-btn-go-title" class="cnation-btn" onclick="cnationGoToTitle()" style="display:none;">타이틀로</button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -986,8 +987,17 @@ if(cnationMissedWords.length === 0) { missedHtml += "틀린 단어가 없습니�
 document.getElementById('cnation-missed-list').innerHTML = missedHtml;
 document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
+
 let levelKey = document.getElementById('cnation-level-select').value;
-setTimeout(() => { cnationHandleScore(cnationScore, levelKey); }, 500);
+let btn = document.getElementById('cnation-btn-go-title');
+let msg = document.getElementById('cnation-ranking-check-msg');
+if(btn) btn.style.display = 'none';
+if(msg) msg.style.display = 'block';
+
+cnationHandleScore(cnationScore, levelKey).then(() => {
+if(btn) btn.style.display = 'block';
+if(msg) msg.style.display = 'none';
+});
 }
 
 function cnationPlayerTick() {
