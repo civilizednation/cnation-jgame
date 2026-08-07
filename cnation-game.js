@@ -168,6 +168,7 @@ let cnationGameStage = 0; let cnationBaseInterval = 208;
 let cnationMaxEnemies = 2; let cnationMaxTime = 20;
 let cnationLives = 3; const cnationMaxLives = 5;
 let cnationStarBonusCount = 0;
+let cnationIsKidsMode = false;
 
 let cnationSelectedVocab = []; let cnationCurrentQuestion = null;
 let cnationTimeLeft = 20; let cnationLastFrameTime = 0;
@@ -246,8 +247,10 @@ let levelSel = document.getElementById('cnation-level-select');
 let levelKey = levelSel.value;
 let levelText = levelSel.options[levelSel.selectedIndex].text;
 
+cnationIsKidsMode = document.getElementById('cnation-kids-mode-checkbox').checked;
+
 cnationSelectedVocab = cnationWordDB[levelKey];
-document.getElementById('cnation-vocab-display').innerText = levelText;
+document.getElementById('cnation-vocab-display').innerText = levelText + (cnationIsKidsMode ? " (어린이)" : "");
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
 document.getElementById('cnation-ranking-screen').style.display = 'none';
@@ -286,23 +289,72 @@ document.getElementById('cnation-info-screen').style.display = 'none';
 document.getElementById('cnation-start-screen').style.display = 'flex';
 };
 
+function cnationHandleScore(score, levelKey) {
+if (score <= 0) return;
+if (cnationIsKidsMode) return;
+
+let topScores = (window.cnationCachedScores && window.cnationCachedScores[levelKey]) || [];
+let isHighScore = false;
+
+if (topScores.length < 10) {
+isHighScore = true;
+} else {
+const minScore = topScores[topScores.length - 1].score;
+if (score > minScore) isHighScore = true;
+}
+
+if (isHighScore) {
+window.cnationPendingScore = score;
+window.cnationPendingLevel = levelKey;
+window.cnationPendingScoresList = topScores;
+document.getElementById('cnation-prompt-input').value = '';
+document.getElementById('cnation-prompt-screen').style.display = 'flex';
+}
+}
+
 window.cnationCancelName = function() {
 document.getElementById('cnation-prompt-screen').style.display = 'none';
 };
 
 function cnationUpdateStage() {
 let levelSpan = document.getElementById('cnation-game-level');
+let baseIntervalRaw = 208;
+let maxTimeRaw = 20;
+let targetMaxEnemies = 2;
+
 if(cnationCorrectAnswers >= 20) {
-cnationGameStage = 2; cnationBaseInterval = 110; cnationMaxEnemies = 4; cnationMaxTime = 15;
+cnationGameStage = 2; baseIntervalRaw = 110; targetMaxEnemies = 4; maxTimeRaw = 15;
 levelSpan.innerText = "상"; levelSpan.style.color = "#ff0000";
 } else if(cnationCorrectAnswers >= 10) {
-cnationGameStage = 1; cnationBaseInterval = 154; cnationMaxEnemies = 3; cnationMaxTime = 18;
+cnationGameStage = 1; baseIntervalRaw = 154; targetMaxEnemies = 3; maxTimeRaw = 18;
 levelSpan.innerText = "중"; levelSpan.style.color = "#0000ff";
 } else {
-cnationGameStage = 0; cnationBaseInterval = 208; cnationMaxEnemies = 2; cnationMaxTime = 20;
+cnationGameStage = 0; baseIntervalRaw = 208; targetMaxEnemies = 2; maxTimeRaw = 20;
 levelSpan.innerText = "하"; levelSpan.style.color = "#000000";
 }
-while(cnationEnemies.length < cnationMaxEnemies) cnationSpawnEnemy();
+
+if (cnationIsKidsMode) {
+cnationBaseInterval = baseIntervalRaw * 3;
+cnationMaxTime = maxTimeRaw * 3;
+// 어린이 모드: "하"일 때 0마리, "중"일 때 1마리, "상"일 때 2마리
+if (cnationGameStage === 0) cnationMaxEnemies = 0;
+else if (cnationGameStage === 1) cnationMaxEnemies = 1;
+else cnationMaxEnemies = 2;
+} else {
+cnationBaseInterval = baseIntervalRaw;
+cnationMaxTime = maxTimeRaw;
+cnationMaxEnemies = targetMaxEnemies;
+}
+
+// 초과된 방해 지렁이 제거
+while(cnationEnemies.length > cnationMaxEnemies) {
+let removed = cnationEnemies.pop();
+removed.meshes.forEach(m => cnationScene.remove(m));
+}
+// 부족한 방해 지렁이 추가
+while(cnationEnemies.length < cnationMaxEnemies) {
+cnationSpawnEnemy();
+}
 }
 
 function cnationResetWorld() {
@@ -477,7 +529,6 @@ document.getElementById('cnation-game-over').style.display = 'flex';
 for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display = 'none';
 
 let levelKey = document.getElementById('cnation-level-select').value;
-// 수정된 부분: window 객체에 등록된 랭킹 핸들러 호출
 if (window.cnationHandleScore) {
   window.cnationHandleScore(cnationScore, levelKey);
 }
@@ -576,10 +627,11 @@ if(cnationTimeLeft < 4) fill.style.background = '#ff0000';
 if(cnationTimeLeft <= 0) cnationPenalty();
 
 cnationFoodData.forEach(f => { f.mesh.rotation.x += 0.03; f.mesh.rotation.y += 0.03; });
+let enemyInterval = cnationIsKidsMode ? (cnationBaseInterval / 0.7) * 3 : (cnationBaseInterval / 0.7);
 if (time - cnationLastTickTime > cnationBaseInterval) { cnationPlayerTick(); cnationLastTickTime = time; }
-if (time - cnationLastEnemyTickTime > (cnationBaseInterval / 0.7)) { cnationEnemyTick(); cnationLastEnemyTickTime = time; }
+if (cnationMaxEnemies > 0 && time - cnationLastEnemyTickTime > enemyInterval) { cnationEnemyTick(); cnationLastEnemyTickTime = time; }
 
-let lerpFactor = 0.12;
+let lerpFactor = cnationIsKidsMode ? 0.04 : 0.12;
 for (let i = 0; i < cnationPlayerMeshes.length; i++) {
 let target = new THREE.Vector3(cnationPlayerLogic[i].x, 0.5, cnationPlayerLogic[i].z); cnationPlayerMeshes[i].position.lerp(target, lerpFactor);
 if (i === 0) {
