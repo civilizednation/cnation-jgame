@@ -124,78 +124,81 @@ let w = window.innerWidth;
 let h = window.innerHeight;
 
 if (typeof cnationIsPCMode !== 'undefined' && cnationIsPCMode) {
-    let minSize = Math.min(w, h);
-    w = minSize;
-    h = minSize;
+let minSize = Math.min(w, h);
+w = minSize;
+h = minSize;
 }
 
 let aspect = w / h;
 let viewSize = 14;
 
 if (aspect < 1) {
-    cnationCamera.left = -viewSize; cnationCamera.right = viewSize;
-    cnationCamera.top = viewSize / aspect; cnationCamera.bottom = -viewSize / aspect;
+cnationCamera.left = -viewSize; cnationCamera.right = viewSize;
+cnationCamera.top = viewSize / aspect; cnationCamera.bottom = -viewSize / aspect;
 } else {
-    cnationCamera.left = -viewSize * aspect; cnationCamera.right = viewSize * aspect;
-    cnationCamera.top = viewSize; cnationCamera.bottom = -viewSize;
+cnationCamera.left = -viewSize * aspect; cnationCamera.right = viewSize * aspect;
+cnationCamera.top = viewSize; cnationCamera.bottom = -viewSize;
 }
 cnationCamera.updateProjectionMatrix();
 cnationCamera.position.set(0, 20, 0);
+cnationCamera.up.set(0, 0, -1);
 cnationCamera.lookAt(0, 0, 0);
 
 if (typeof cnationRenderer !== 'undefined') {
-    cnationRenderer.setSize(w, h);
-    if (typeof cnationIsPCMode !== 'undefined' && cnationIsPCMode) {
-        cnationRenderer.domElement.style.position = "absolute";
-        cnationRenderer.domElement.style.left = "50%";
-        cnationRenderer.domElement.style.top = "50%";
-        cnationRenderer.domElement.style.transform = "translate(-50%, -50%)";
-        
-        let ui = document.getElementById('cnation-game-ui');
-        if(ui) {
-            ui.style.width = w + 'px';
-            ui.style.left = '50%';
-            ui.style.transform = 'translateX(-50%)';
-        }
-        let fb = document.getElementById('cnation-feedback-container');
-        if(fb) {
-            fb.style.width = w + 'px';
-            fb.style.left = '50%';
-            fb.style.transform = 'translateX(-50%)';
-            fb.style.bottom = ((window.innerHeight - h)/2 + 40) + 'px';
-        }
-        let ev = document.getElementById('cnation-event-msg-container');
-        if(ev) {
-            ev.style.width = w + 'px';
-            ev.style.left = '50%';
-            ev.style.transform = 'translateX(-50%)';
-            ev.style.bottom = ((window.innerHeight - h)/2 + 100) + 'px';
-        }
-    } else {
-        cnationRenderer.domElement.style.position = "static";
-        cnationRenderer.domElement.style.transform = "none";
-        
-        let ui = document.getElementById('cnation-game-ui');
-        if(ui) {
-            ui.style.width = '100%';
-            ui.style.left = '0';
-            ui.style.transform = 'none';
-        }
-        let fb = document.getElementById('cnation-feedback-container');
-        if(fb) {
-            fb.style.width = '100%';
-            fb.style.left = '0';
-            fb.style.transform = 'none';
-            fb.style.bottom = '40px';
-        }
-        let ev = document.getElementById('cnation-event-msg-container');
-        if(ev) {
-            ev.style.width = '100%';
-            ev.style.left = '0';
-            ev.style.transform = 'none';
-            ev.style.bottom = '100px';
-        }
-    }
+cnationRenderer.setSize(w, h);
+if (typeof cnationIsPCMode !== 'undefined' && cnationIsPCMode) {
+cnationRenderer.domElement.style.position = "absolute";
+cnationRenderer.domElement.style.left = "50%";
+cnationRenderer.domElement.style.top = "50%";
+cnationRenderer.domElement.style.transform = "translate(-50%, -50%)";
+
+let ui = document.getElementById('cnation-game-ui');
+if(ui) {
+ui.style.width = w + 'px';
+ui.style.left = '50%';
+ui.style.transform = 'translateX(-50%)';
+ui.style.top = ((window.innerHeight - h) / 2) + 'px';
+}
+let fb = document.getElementById('cnation-feedback-container');
+if(fb) {
+fb.style.width = w + 'px';
+fb.style.left = '50%';
+fb.style.transform = 'translateX(-50%)';
+fb.style.bottom = ((window.innerHeight - h) / 2 + 40) + 'px';
+}
+let ev = document.getElementById('cnation-event-msg-container');
+if(ev) {
+ev.style.width = w + 'px';
+ev.style.left = '50%';
+ev.style.transform = 'translateX(-50%)';
+ev.style.bottom = ((window.innerHeight - h) / 2 + 100) + 'px';
+}
+} else {
+cnationRenderer.domElement.style.position = "static";
+cnationRenderer.domElement.style.transform = "none";
+
+let ui = document.getElementById('cnation-game-ui');
+if(ui) {
+ui.style.width = '100%';
+ui.style.left = '0';
+ui.style.transform = 'none';
+ui.style.top = '0px';
+}
+let fb = document.getElementById('cnation-feedback-container');
+if(fb) {
+fb.style.width = '100%';
+fb.style.left = '0';
+fb.style.transform = 'none';
+fb.style.bottom = '40px';
+}
+let ev = document.getElementById('cnation-event-msg-container');
+if(ev) {
+ev.style.width = '100%';
+ev.style.left = '0';
+ev.style.transform = 'none';
+ev.style.bottom = '100px';
+}
+}
 }
 }
 
@@ -317,13 +320,18 @@ let levelSel = document.getElementById('cnation-level-select');
 let levelKey = levelSel.value;
 let levelText = levelSel.options[levelSel.selectedIndex].text;
 
+if (typeof cnationWordDB === 'undefined' || !cnationWordDB[levelKey]) {
+alert("단어 데이터를 불러올 수 없습니다. word.js 파일 연결 상태나 내용을 확인해주세요.");
+return;
+}
+
 cnationIsKidsMode = document.getElementById('cnation-kids-mode-checkbox').checked;
 cnationIsPCMode = document.getElementById('cnation-pc-mode-checkbox').checked;
 
 if (cnationIsPCMode) {
-    document.body.classList.add('pc-mode-active');
+document.body.classList.add('pc-mode-active');
 } else {
-    document.body.classList.remove('pc-mode-active');
+document.body.classList.remove('pc-mode-active');
 }
 
 let vocabDisplay = document.getElementById('cnation-vocab-display');
@@ -334,6 +342,8 @@ vocabDisplay.innerText = "어린이 모드";
 vocabDisplay.className = "cnation-highlight-box";
 vocabDisplay.innerText = levelText;
 }
+
+cnationSelectedVocab = cnationWordDB[levelKey];
 
 document.getElementById('cnation-start-screen').style.display = 'none';
 document.getElementById('cnation-game-over').style.display = 'none';
@@ -551,11 +561,11 @@ let offsetX_canvas = 0;
 let offsetY_canvas = 0;
 
 if (typeof cnationIsPCMode !== 'undefined' && cnationIsPCMode) {
-    let minSize = Math.min(w, h);
-    offsetX_canvas = (w - minSize) / 2;
-    offsetY_canvas = (h - minSize) / 2;
-    w = minSize;
-    h = minSize;
+let minSize = Math.min(w, h);
+offsetX_canvas = (w - minSize) / 2;
+offsetY_canvas = (h - minSize) / 2;
+w = minSize;
+h = minSize;
 }
 
 let baseFontSize = Math.min(40, Math.max(16, w * 0.04));
@@ -624,7 +634,7 @@ for(let i=0; i<4; i++) document.getElementById('cnation-label-'+i).style.display
 
 let levelKey = document.getElementById('cnation-level-select').value;
 if (!cnationIsKidsMode && window.cnationHandleScore) {
-  window.cnationHandleScore(cnationScore, levelKey);
+window.cnationHandleScore(cnationScore, levelKey);
 }
 }
 
@@ -753,5 +763,5 @@ cnationUpdateLabels();
 cnationRenderer.render(cnationScene, cnationCamera);
 }
 
-window.addEventListener('resize', () => { cnationAdjustCamera(); cnationRenderer.setSize(window.innerWidth, window.innerHeight); });
+window.addEventListener('resize', () => { cnationAdjustCamera(); });
 cnationAdjustCamera(); requestAnimationFrame(cnationAnimate);
