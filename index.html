@@ -49,18 +49,18 @@ h1 { color: #000000; font-size: 32px; margin-bottom: 10px; text-shadow: 2px 2px 
 
 /* 🚨 스마트폰/태블릿 가로 모드 방지 오버레이 스타일 🚨 */
 #cnation-rotate-warning { 
-    display: none; 
-    position: fixed; 
-    top: 0; left: 0; width: 100%; height: 100%; 
-    background-color: #2c3e50; 
-    color: #ffffff; 
-    z-index: 99999; 
-    flex-direction: column; justify-content: center; align-items: center; 
-    text-align: center; font-size: 22px; font-weight: bold; line-height: 1.6; 
+display: none; 
+position: fixed; 
+top: 0; left: 0; width: 100%; height: 100%; 
+background-color: #2c3e50; 
+color: #ffffff; 
+z-index: 99999; 
+flex-direction: column; justify-content: center; align-items: center; 
+text-align: center; font-size: 22px; font-weight: bold; line-height: 1.6; 
 }
 /* 터치가 가능한 기기(pointer: coarse)에서 가로 모드(landscape)일 때만 활성화 */
 @media (pointer: coarse) and (orientation: landscape) {
-    #cnation-rotate-warning { display: flex; }
+#cnation-rotate-warning { display: flex; }
 }
 </style>
 </head>
@@ -68,13 +68,18 @@ h1 { color: #000000; font-size: 32px; margin-bottom: 10px; text-shadow: 2px 2px 
 
 <!-- 가로 모드 방지 안내창 (평소엔 숨겨져 있음) -->
 <div id="cnation-rotate-warning">
-    <div style="font-size: 70px; margin-bottom: 20px;">📱🔄</div>
-    <span style="color:#f1c40f; font-size: 26px; margin-bottom:10px;">세로 모드 전용 게임입니다</span>
-    원활한 플레이를 위해<br>기기를 세로로 회전해 주세요!
+<div style="font-size: 70px; margin-bottom: 20px;">📱🔄</div>
+<span style="color:#f1c40f; font-size: 26px; margin-bottom:10px;">세로 모드 전용 게임입니다</span>
+원활한 플레이를 위해<br>기기를 세로로 회전해 주세요!
 </div>
 
 <div id="cnation-start-screen">
 <h1>cnation 영어단어<br>지렁이 게임</h1>
+
+<div style="color: #e84393; font-size: 13px; font-weight: bold; width: 90%; max-width: 350px; text-align: center; margin-bottom: 15px; line-height: 1.5; word-break: keep-all; background: rgba(255, 192, 203, 0.2); padding: 10px; border-radius: 8px; border: 1px solid #ffb6c1;">
+[공지] 랭킹 점수 관리 서버에 지연이 생겨 전체 랭킹 점수가 일주일 전 상태로 환원 되었습니다.<br>앞으로 이런 서버 지연에 의한 점수 환원 문제가 안생기도록 코드 수정 완료했으니 이제 부터 안심하고 랭킹에 도전 하세요.
+</div>
+
 <p class="cnation-select-label">영어 단어 수준</p>
 <select id="cnation-level-select" class="cnation-select">
 <option value="kindergarten">유치원생</option>
@@ -174,7 +179,7 @@ h1 { color: #000000; font-size: 32px; margin-bottom: 10px; text-shadow: 2px 2px 
 </div>
 
 <div id="cnation-game-ui">
-<p class="cnation-ui-text"><span id="cnation-lives-display">❤️❤️❤️🤍🤍</span> | <span id="cnation-vocab-container"><span id="cnation-vocab-display" class="cnation-highlight-box">유치원생</span></span> | 난이도: <span id="cnation-game-level" class="cnation-highlight-box">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
+<p class="cnation-ui-text"><span id="cnation-lives-display">❤️❤️❤️🤍🤍</span> | 단어: <span id="cnation-vocab-display" class="cnation-highlight-box">유치원생</span> | 난이도: <span id="cnation-game-level" class="cnation-highlight-box">하</span> | SCORE: <span id="cnation-score-val">0</span></p>
 <p id="cnation-question-text">의미</p>
 <div id="cnation-timer-bar"><div id="cnation-timer-fill"></div></div>
 </div>
