@@ -35,8 +35,12 @@ window.cnationPreloadRankings = async function() {
 window.cnationPreloadRankings();
 
 window.cnationShowRanking = function() {
-document.getElementById('cnation-start-screen').style.display = 'none';
-document.getElementById('cnation-ranking-screen').style.display = 'flex';
+const startScreen = document.getElementById('cnation-start-screen');
+if (startScreen) startScreen.style.display = 'none';
+
+const rankingScreen = document.getElementById('cnation-ranking-screen');
+if (rankingScreen) rankingScreen.style.display = 'flex';
+
 const container = document.getElementById('cnation-ranking-content');
 const levels = [
 { key: 'high', name: '고등학생', color: '#c0392b' },
@@ -63,7 +67,7 @@ tableHtml += `<tr><td colspan="3" style="padding:15px; color:#999;">아직 등�
 tableHtml += '</table></div>';
 html += tableHtml;
 }
-container.innerHTML = html;
+if (container) container.innerHTML = html;
 };
 
 window.cnationResetRanking = async function() {
@@ -79,9 +83,11 @@ window.cnationShowRanking();
 } else if (pw !== null) { alert("비밀번호가 틀렸습니다."); }
 };
 
-// 게임 오버 시 점수를 판정하고 신기록일 경우 팝업을 띄우는 함수 추가
 window.cnationHandleScore = function(score, levelKey) {
 if (score <= 0) return;
+// 어린이 모드일 경우 cnationIsKidsMode 변수가 존재하고 참이면 제외
+if (typeof cnationIsKidsMode !== 'undefined' && cnationIsKidsMode) return;
+
 let topScores = window.cnationCachedScores[levelKey] || [];
 let isHighScore = false;
 
@@ -95,7 +101,6 @@ if (score > minScore) isHighScore = true;
 if (isHighScore) {
 window.cnationPendingScore = score;
 window.cnationPendingLevel = levelKey;
-window.cnationPendingScoresList = topScores;
 document.getElementById('cnation-prompt-input').value = '';
 document.getElementById('cnation-prompt-screen').style.display = 'flex';
 }
@@ -107,13 +112,34 @@ if(!name) { alert("이름을 입력해주세요!"); return; }
 document.getElementById('cnation-prompt-screen').style.display = 'none';
 
 name = name.substring(0, 20);
-window.cnationPendingScoresList.push({ name: name, score: window.cnationPendingScore });
-window.cnationPendingScoresList.sort((a, b) => b.score - a.score);
-window.cnationPendingScoresList = window.cnationPendingScoresList.slice(0, 10);
-
-window.cnationCachedScores[window.cnationPendingLevel] = window.cnationPendingScoresList;
 
 try {
-await setDoc(doc(db, SCORE_COL, window.cnationPendingLevel), { scores: window.cnationPendingScoresList });
-} catch(e) { console.error("Save error", e); }
+// 🚨 [핵심 수정 포인트] 저장 직전에 서버에서 가장 최신 랭킹 데이터를 다시 불러옵니다. 🚨
+const docRef = doc(db, SCORE_COL, window.cnationPendingLevel);
+const snap = await getDoc(docRef);
+let latestScores = [];
+
+// 서버에 기존 데이터가 정상적으로 있다면 가져옵니다. (네트워크 끊김으로 인한 초기화 방지)
+if (snap.exists() && snap.data().scores) {
+  latestScores = snap.data().scores;
+}
+
+// 최신 랭킹 목록에 내 점수를 추가하고 재정렬합니다.
+latestScores.push({ name: name, score: window.cnationPendingScore });
+latestScores.sort((a, b) => b.score - a.score);
+latestScores = latestScores.slice(0, 10); // 상위 10명만 유지
+
+// 병합된 안전한 데이터를 서버와 로컬에 저장합니다.
+await setDoc(docRef, { scores: latestScores });
+window.cnationCachedScores[window.cnationPendingLevel] = latestScores;
+
+// 랭킹 화면이 열려있다면 즉시 갱신해 줍니다.
+if (document.getElementById('cnation-ranking-screen').style.display === 'flex') {
+  window.cnationShowRanking();
+}
+
+} catch(e) { 
+console.error("Save error", e); 
+alert("랭킹 등록 중 통신 오류가 발생했습니다. 네트워크 상태를 확인해주세요.");
+}
 };
